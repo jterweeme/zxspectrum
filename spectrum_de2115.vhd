@@ -577,10 +577,6 @@ signal zxmmc_rd_en	:	std_logic;
 signal zxmmc_rom_nram	:	std_logic;
 signal zxmmc_bank	:	std_logic_vector(4 downto 0);
 
--- 7 Segment displays for keycode (debug fix for some keyboards not working)
---signal dig0 : std_logic_vector(3 downto 0);
---signal dig1 : std_logic_vector(3 downto 0);
-
 begin
 	-- 28 MHz master clock
 	pll: pll_main port map (
@@ -600,40 +596,6 @@ begin
 		cpu_clken,
 		vid_clken
 		);
-		
---	-- Hardware debugger block (single-step, breakpoints)
---	debug:	debugger port map (
---		clock,
---		reset_n,
---		cpu_clken,
---		debug_cpu_clken,
---		debug_irq_in_n,
---		cpu_irq_n,
---		cpu_a(15 downto 0), cpu_wr_n, debug_fetch,
---		debug_aux,
---		SW(8), -- RUN
---		KEY(3), -- STEP
---		KEY(2), -- MODE
---		KEY(1), -- DIGIT
---		KEY(0), -- SET
---		HEX3, HEX2, HEX1, HEX0,
---		LEDR(3), -- BREAKPOINT
---		LEDR(2) -- WATCHPOINT
---		);
---	debug_fetch <= not (cpu_m1_n or cpu_mreq_n);
---	-- VSYNC interrupt routed through debugger
---	debug_irq_in_n <= vid_irq_n;	
-	
-	-- 7 segment display drivers for keycode
---	seg1: hex7seg port map (
---		dig0,
---		HEX0
---		);
---
---	seg2: hex7seg port map (
---		dig1,
---		HEX1
---		);
 		
 	-- CPU
 	cpu: T80se port map (
@@ -722,25 +684,11 @@ begin
 	pll_reset <= not SW(9);
 	-- System is reset by external reset switch or PLL being out of lock
 	reset_n <= not (pll_reset or not pll_locked);
-	
-	-- Address decoding.  Z80 has separate IO and memory address space
-	-- IO ports (nominal addresses - incompletely decoded):
-	-- 0xXXFE R/W = ULA
-	-- 0x7FFD W   = 128K paging register
-	-- 0xFFFD W   = 128K AY-3-8912 register select
-	-- 0xFFFD R   = 128K AY-3-8912 register read
-	-- 0xBFFD W   = 128K AY-3-8912 register write
-	-- 0x1FFD W   = +3 paging and control register
-	-- 0x2FFD R   = +3 FDC status register
-	-- 0x3FFD R/W = +3 FDC data register
-	-- 0xXXXF R/W = ZXMMC interface
-	-- FIXME: Revisit this - could be neater
 	ula_enable <= (not cpu_ioreq_n) and not cpu_a(0); -- all even IO addresses
 	psg_enable <= (not cpu_ioreq_n) and cpu_a(0) and cpu_a(15) and not cpu_a(1);
 	zxmmc_enable <= (not cpu_ioreq_n) and cpu_a(4) and cpu_a(3) and cpu_a(2) and cpu_a(1) and cpu_a(0);
-	addr_decode_128k: if model /= 2 generate
-		page_enable <= (not cpu_ioreq_n) and cpu_a(0) and not (cpu_a(15) or cpu_a(1));
-	end generate;
+	page_enable <= (not cpu_ioreq_n) and cpu_a(0) and not (cpu_a(15) or cpu_a(1));
+
 	addr_decode_plus3: if model = 2 generate
 		-- Paging register address decoding is slightly stricter on the +3
 		page_enable <= (not cpu_ioreq_n) and cpu_a(0) and cpu_a(14) and not (cpu_a(15) or cpu_a(1));
