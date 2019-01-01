@@ -390,40 +390,6 @@ port (
 	);
 end component;
 
------------
--- Sound
------------
-
-component YM2149 is
-  port (
-  -- data bus
-  I_DA                : in  std_logic_vector(7 downto 0);
-  O_DA                : out std_logic_vector(7 downto 0);
-  O_DA_OE_L           : out std_logic;
-  -- control
-  I_A9_L              : in  std_logic;
-  I_A8                : in  std_logic;
-  I_BDIR              : in  std_logic;
-  I_BC2               : in  std_logic;
-  I_BC1               : in  std_logic;
-  I_SEL_L             : in  std_logic;
-
-  O_AUDIO             : out std_logic_vector(7 downto 0);
-  -- port a
-  I_IOA               : in  std_logic_vector(7 downto 0);
-  O_IOA               : out std_logic_vector(7 downto 0);
-  O_IOA_OE_L          : out std_logic;
-  -- port b
-  I_IOB               : in  std_logic_vector(7 downto 0);
-  O_IOB               : out std_logic_vector(7 downto 0);
-  O_IOB_OE_L          : out std_logic;
-  --
-  ENA                 : in  std_logic;
-  RESET_L             : in  std_logic;
-  CLK                 : in  std_logic
-  );
-end component;
-
 component i2s_intf is
 generic(
 	mclk_rate : positive := 12000000;
@@ -489,59 +455,6 @@ port (
 	IS_ERROR	:	out	std_logic
 	);
 end component;
-
--------------------
--- MMC interface
--------------------
-
-component zxmmc is
-port (
-	CLOCK		:	in	std_logic;
-	nRESET		:	in	std_logic;
-	CLKEN		:	in	std_logic;
-	
-	-- Bus interface
-	ENABLE		:	in	std_logic;
-	-- 0 - W  - Card chip selects (active low)
-	-- 1 - RW - SPI tx/rx data register
-	-- 2 - Not used
-	-- 3 - RW - Paging control register
-	RS			:	in	std_logic_vector(1 downto 0);
-	nWR			:	in	std_logic;
-	DI			:	in	std_logic_vector(7 downto 0);
-	DO			:	out	std_logic_vector(7 downto 0);
-	
-	-- SD card interface
-	SD_CS0		:	out	std_logic;
-	SD_CS1		:	out	std_logic;
-	SD_CLK		:	out	std_logic;
-	SD_MOSI		:	out	std_logic;
-	SD_MISO		:	in	std_logic;
-	
-	-- Paging control for external RAM/ROM banks
-	EXT_WR_EN	:	out	std_logic; -- Enable writes to external RAM/ROM
-	EXT_RD_EN	:	out	std_logic; -- Enable reads from external RAM/ROM (overlay internal ROM)
-	EXT_ROM_nRAM	:	out	std_logic; -- Select external ROM or RAM banks
-	EXT_BANK	:	out	std_logic_vector(4 downto 0); -- Selected bank number
-	
-	-- DIP switches (reset values for corresponding bits above)
-	INIT_RD_EN	:	in	std_logic;
-	INIT_ROM_nRAM	:	in	std_logic
-	);
-end component;
-
--------------------
--- 7segment interface
--------------------
-
-component hex7seg is port (
-	HEX:	in std_logic_vector(3 downto 0);
-	SEGMENT:	out std_logic_vector(6 downto 0)
-	);
-end component;
--------------
--- Signals
--------------
 
 -- Master clock - 28 MHz
 signal pll_reset		:	std_logic;
@@ -778,28 +691,6 @@ begin
 		vid_irq_n
 		);
 		
-	-- Sound
-	sound_128k: if model /= 0 generate
-		-- PSG only on 128K and above
-		psg : YM2149 port map (
-			cpu_do, psg_do, open,
-			'0', -- /A9 pulled down internally
-			'1', -- A8 pulled up on Spectrum
-			psg_bdir,
-			'1', -- BC2 pulled up on Spectrum
-			psg_bc1,
-			'1', -- /SEL is high for AY-3-8912 compatibility
-			psg_aout,
-			(others => '0'), open, open, -- port A unused (keypad and serial on Spectrum 128K)
-			(others => '0'), open, open, -- port B unused (non-existent on AY-3-8912)
-			psg_clken,
-			reset_n,
-			clock
-			);
-		psg_bdir <= psg_enable and cpu_rd_n;
-		psg_bc1 <= psg_enable and cpu_a(14);
-	end generate;
-	
 	i2s: i2s_intf port map (
 		audio_clock, reset_n,
 		pcm_inl, pcm_inr,
