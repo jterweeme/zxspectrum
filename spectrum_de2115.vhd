@@ -212,60 +212,6 @@ port (
 	);
 end component;
 
-
---------------
--- Debugger
---------------
-
-component debugger is
-generic (
-	-- Set this for a reasonable half flash duration relative to the
-	-- clock frequency
-	flash_divider	:	natural := 24
-	);
-port (
-	CLOCK		:	in	std_logic;
-	nRESET		:	in	std_logic;
-	-- CPU clock enable in
-	CLKEN_IN	:	in	std_logic;
-	-- Gated clock enable back out to CPU
-	CLKEN_OUT	:	out	std_logic;
-	-- CPU IRQ in
-	nIRQ_IN		:	in	std_logic;
-	-- Gated IRQ back out to CPU (no interrupts when single stepping)
-	nIRQ_OUT	:	out	std_logic;
-	
-	-- CPU
-	A_CPU		:	in	std_logic_vector(15 downto 0);
-	R_nW		:	in	std_logic;
-	SYNC		:	in	std_logic;
-	
-	-- Aux bus input for display in hex
-	AUX_BUS		:	in	std_logic_vector(15 downto 0);
-	
-	-- Controls
-	-- RUN or HALT CPU
-	RUN			:	in	std_logic;
-	-- Push button to single-step in HALT mode
-	nSTEP		:	in	std_logic;
-	-- Push button to cycle display mode
-	nMODE		:	in	std_logic;
-	-- Push button to cycle display digit in edit mode
-	nDIGIT		:	in	std_logic;
-	-- Push button to cycle digit value in edit mode
-	nSET		:	in	std_logic;
-	
-	-- Output to display
-	DIGIT3		:	out	std_logic_vector(6 downto 0);
-	DIGIT2		:	out	std_logic_vector(6 downto 0);
-	DIGIT1		:	out	std_logic_vector(6 downto 0);
-	DIGIT0		:	out	std_logic_vector(6 downto 0);
-	
-	LED_BREAKPOINT	:	out	std_logic;
-	LED_WATCHPOINT	:	out	std_logic
-	);
-end component;
-
 ---------
 -- CPU
 ---------
@@ -298,10 +244,6 @@ component T80se is
 	);
 end component;
 
---------------
--- ULA port
---------------
-
 component ula_port is
 port (
 	CLK		:	in	std_logic;
@@ -321,10 +263,6 @@ port (
 	EAR_IN		:	in	std_logic	
 	);
 end component;
-
----------------
--- ULA video
----------------
 
 component video is
 port(
@@ -366,10 +304,6 @@ port(
 	nIRQ		:	out	std_logic
 );
 end component;
-
---------------
--- Keyboard
---------------
 
 component keyboard is
 port (
