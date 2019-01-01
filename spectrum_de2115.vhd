@@ -307,20 +307,12 @@ end component;
 
 component keyboard is
 port (
-	CLK			:	in	std_logic;
-	nRESET		:	in	std_logic;
-
-	-- PS/2 interface
-	PS2_CLK		:	inout	std_logic;
-	PS2_DATA	:	inout	std_logic;
-	
-	-- CPU address bus (row)
-	A			:	in	std_logic_vector(15 downto 0);
-	-- Column outputs to ULA
-	KEYB		:	out	std_logic_vector(4 downto 0)
-	-- Debug port
---	DIG0		:	out	std_logic_vector(3 downto 0);
---	DIG1		:	out	std_logic_vector(3 downto 0)
+	CLK: in std_logic;
+	nRESET: in std_logic;
+	PS2_CLK: inout std_logic;
+	PS2_DATA: inout std_logic;
+	A: in std_logic_vector(15 downto 0);
+	KEYB: out std_logic_vector(4 downto 0)
 	);
 end component;
 
@@ -429,12 +421,6 @@ signal plus3_special	:	std_logic := '0'; -- bit 0
 -- RAM bank actually being accessed
 signal ram_page			:	std_logic_vector(2 downto 0);
 
--- Debugger connections
-signal debug_cpu_clken	:	std_logic;
-signal debug_irq_in_n	:	std_logic;
-signal debug_fetch		:	std_logic;
-signal debug_aux		:	std_logic_vector(15 downto 0);
-
 -- SRAM bus high/low byte mux
 signal sram_di			:	std_logic_vector(7 downto 0);
 
@@ -534,8 +520,7 @@ begin
 	-- CPU
 	cpu: T80se port map (
 		reset_n, clock, cpu_clken, 
-		--debug_cpu_clken,
-		cpu_wait_n, --debug_irq_in_n, 
+		cpu_wait_n,
 		cpu_irq_n, 
 		cpu_nmi_n,
 		cpu_busreq_n, cpu_m1_n,
@@ -551,18 +536,14 @@ begin
 	cpu_nmi_n <= '1';
 	cpu_busreq_n <= '1';
 		
-	-- Keyboard
-	kb:	keyboard port map (
+	kb: keyboard port map (
 		clock, reset_n,
 		PS2_CLK, PS2_DAT,
-		cpu_a, keyb
---		dig0, dig1
-		);
+		cpu_a, keyb);
 
 	GPIO(7) <= PS2_CLK;
 	GPIO(9) <= PS2_DAT;
 	
-	-- ULA port
 	ula: ula_port port map (
 		clock, reset_n,
 		cpu_do, ula_do,
@@ -570,10 +551,8 @@ begin
 		ula_border,
 		ula_ear_out, ula_mic_out,
 		keyb,
-		ula_ear_in
-		);
+		ula_ear_in);
 		
-	-- ULA video
 	vid: video port map (
 		clock, vid_clken, reset_n,
 		SW(7),
@@ -584,8 +563,7 @@ begin
 		vid_csync_n, vid_hcsync_n,
 		vid_is_border, vid_is_valid,
 		vid_pixclk, vid_flashclk,
-		vid_irq_n
-		);
+		vid_irq_n);
 		
 	i2s: i2s_intf port map (
 		audio_clock, reset_n,
@@ -623,12 +601,6 @@ begin
 	zxmmc_enable <= (not cpu_ioreq_n) and cpu_a(4) and cpu_a(3) and cpu_a(2) and cpu_a(1) and cpu_a(0);
 	page_enable <= (not cpu_ioreq_n) and cpu_a(0) and not (cpu_a(15) or cpu_a(1));
 
-	addr_decode_plus3: if model = 2 generate
-		-- Paging register address decoding is slightly stricter on the +3
-		page_enable <= (not cpu_ioreq_n) and cpu_a(0) and cpu_a(14) and not (cpu_a(15) or cpu_a(1));
-		plus3_enable <= (not cpu_ioreq_n) and cpu_a(0) and cpu_a(12) and not (cpu_a(15) or cpu_a(14) or cpu_a(13) or cpu_a(1));
-	end generate;
-	
 	-- ROM is enabled between 0x0000 and 0x3fff except in +3 special mode
 	rom_enable <= (not cpu_mreq_n) and not (plus3_special or cpu_a(15) or cpu_a(14));
 	-- RAM is enabled for any memory request when ROM isn't enabled
@@ -779,48 +751,6 @@ begin
 		end if;
 	end process;
 	
-	page_reg_128k: if model /= 0 generate
-		-- 128K paging register
-		process(clock,reset_n)
-		begin
-			if reset_n = '0' then
-				page_reg_disable <= '0';
-				page_rom_sel <= '0';
-				page_shadow_scr <= '0';
-				page_ram_sel <= (others => '0');
-			elsif rising_edge(clock) then
-				if page_enable = '1' and page_reg_disable = '0' and cpu_wr_n = '0' then
-					page_reg_disable <= cpu_do(5);
-					page_rom_sel <= cpu_do(4);
-					page_shadow_scr <= cpu_do(3);
-					page_ram_sel <= cpu_do(2 downto 0);
-				end if;
-			end if;
-		end process;
-	end generate;
-	
-	plus3_reg: if model = 2 generate
-		-- +3 paging and control register
-		process(clock,reset_n)
-		begin
-			if reset_n = '0' then
-				plus3_printer_strobe <= '0';
-				plus3_disk_motor <= '0';
-				plus3_page <= (others => '0');
-				plus3_special <= '0';
-			elsif rising_edge(clock) then
-				-- FIXME: Does this get disabled by the page_reg_disable bit?
-				if plus3_enable = '1' and cpu_wr_n = '0' then
-					plus3_printer_strobe <= cpu_do(4);
-					plus3_disk_motor <= cpu_do(3);
-					plus3_page <= cpu_do(2 downto 1);
-					plus3_special <= cpu_do(0);
-				end if;
-			end if;
-		end process;
-	end generate;
-	
-	-- Connect audio to PCM interface
 	pcm_outl <= ula_ear_out & psg_aout & ula_mic_out & "000000";
 	pcm_outr <= ula_ear_out & psg_aout & ula_mic_out & "000000";
 	
