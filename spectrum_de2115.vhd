@@ -403,7 +403,6 @@ signal page_enable		:	std_logic; -- all odd IO addresses with A15 and A1 clear (
 signal psg_enable		:	std_logic; -- all odd IO addresses with A15 set and A1 clear
 -- +3 extensions
 signal plus3_enable		:	std_logic; -- A15, A14, A13, A1 clear, A12 set.
--- ZXMMC
 signal zxmmc_enable		:	std_logic; -- A4-A0 set
 
 -- 128K paging register (with default values for systems that don't have it)
@@ -483,15 +482,11 @@ signal pcm_outr		:	std_logic_vector(15 downto 0);
 signal pcm_inl		:	std_logic_vector(15 downto 0);
 signal pcm_inr		:	std_logic_vector(15 downto 0);
 
--- ZXMMC interface
 signal zxmmc_do		:	std_logic_vector(7 downto 0);
-
 signal zxmmc_sclk	:	std_logic;
 signal zxmmc_mosi	:	std_logic;
 signal zxmmc_miso	:	std_logic;
 signal zxmmc_cs0	:	std_logic;
-
--- ZXMMC+ external ROM/RAM interface (for ResiDOS)
 signal zxmmc_wr_en	:	std_logic;
 signal zxmmc_rd_en	:	std_logic;
 signal zxmmc_rom_nram	:	std_logic;
@@ -570,8 +565,8 @@ begin
 		pcm_inl, pcm_inr,
 		pcm_outl, pcm_outr,
 		AUD_XCK, pcm_lrclk,
-		AUD_BCLK, AUD_DACDAT, AUD_ADCDAT
-		);
+		AUD_BCLK, AUD_DACDAT, AUD_ADCDAT);
+		
 	AUD_DACLRCK <= pcm_lrclk;
 	AUD_ADCLRCK <= pcm_lrclk;
 	
@@ -586,19 +581,12 @@ begin
 			LEDR(0) -- IS_ERROR
 		);
 		
-	GPIO(0) <= zxmmc_cs0;
-	GPIO(1) <= zxmmc_sclk;
-	GPIO(2) <= zxmmc_mosi;
-	GPIO(3) <= zxmmc_miso;
-		
 	-- Asynchronous reset
 	-- PLL is reset by external reset switch
 	pll_reset <= not SW(9);
-	-- System is reset by external reset switch or PLL being out of lock
 	reset_n <= not (pll_reset or not pll_locked);
 	ula_enable <= (not cpu_ioreq_n) and not cpu_a(0); -- all even IO addresses
 	psg_enable <= (not cpu_ioreq_n) and cpu_a(0) and cpu_a(15) and not cpu_a(1);
-	zxmmc_enable <= (not cpu_ioreq_n) and cpu_a(4) and cpu_a(3) and cpu_a(2) and cpu_a(1) and cpu_a(0);
 	page_enable <= (not cpu_ioreq_n) and cpu_a(0) and not (cpu_a(15) or cpu_a(1));
 
 	-- ROM is enabled between 0x0000 and 0x3fff except in +3 special mode
@@ -612,18 +600,10 @@ begin
 		
 	-- CPU data bus mux
 	cpu_di <=
-		-- System RAM
 		sram_di when ram_enable = '1' else
-		-- External (ZXMMC+) RAM at 0x0000-0x3fff when enabled
-		-- This overlays the internal ROM
-		sram_di when rom_enable = '1' and zxmmc_rd_en = '1' and zxmmc_rom_nram = '0' else
-		-- Internal ROM or external (ZXMMC+) ROM at 0x0000-0x3fff
 		FL_DQ when rom_enable = '1' else
-		-- IO ports
 		ula_do when ula_enable = '1' else
 		psg_do when psg_enable = '1' else
-		zxmmc_do when zxmmc_enable = '1' else
-		-- Idle bus
 		(others => '1');
 	
 	-- ROMs are in external flash starting at 0x20000
@@ -631,14 +611,8 @@ begin
 	FL_RST_N <= reset_n;
 	FL_CE_N <= '0';
 	FL_OE_N <= '0';
-	FL_WE_N <= '1';
-
-	FL_ADDR <= 
-			-- Overlay external ROMs when enabled
-			'0' & ZXMMC_ROM_OFFSET(7 downto 4) & zxmmc_bank(3 downto 0) & cpu_a(13 downto 0)
-			when zxmmc_rd_en = '1' else
-			-- Otherwise access the internal ROM
-			'0' & ROM_OFFSET & cpu_a(13 downto 0);
+	FL_WE_N <= '1';		
+	FL_ADDR <= '0' & ROM_OFFSET & cpu_a(13 downto 0);
 
 	-- SRAM bus
 	SRAM_CE_N <= '0';
@@ -737,5 +711,6 @@ begin
 	VGA_VS <= vid_vsync_n;
 	VGA_BLANK_N <= vid_is_valid;
 	VGA_CLK <= vid_pixclk;
-	
 end architecture;
+
+

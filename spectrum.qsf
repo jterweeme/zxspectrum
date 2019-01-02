@@ -737,7 +737,6 @@ set_location_assignment PIN_AB21 -to GPIO[2]
 set_location_assignment PIN_Y17 -to GPIO[3]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to EXT_CLOCK
 set_location_assignment PIN_AH14 -to EXT_CLOCK
-set_global_assignment -name VHDL_FILE debounce.vhd
 set_global_assignment -name VHDL_FILE ula_port.vhd
 set_global_assignment -name VHDL_FILE spectrum_de2115.vhd
 set_global_assignment -name VHDL_FILE video.vhd
@@ -752,7 +751,6 @@ set_global_assignment -name VHDL_FILE ps2_intf.vhd
 set_global_assignment -name VHDL_FILE keyboard.vhd
 set_global_assignment -name VHDL_FILE i2s_intf.vhd
 set_global_assignment -name VHDL_FILE i2c_loader.vhd
-set_global_assignment -name VHDL_FILE zxmmc.vhd
 set_global_assignment -name QIP_FILE pll_main.qip
 set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
 set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
