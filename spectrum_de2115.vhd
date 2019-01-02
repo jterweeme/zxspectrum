@@ -605,30 +605,10 @@ begin
 	rom_enable <= (not cpu_mreq_n) and not (plus3_special or cpu_a(15) or cpu_a(14));
 	-- RAM is enabled for any memory request when ROM isn't enabled
 	ram_enable <= not (cpu_mreq_n or rom_enable);
-	ram_page_128k: if model /= 2 generate
-		-- 128K has pageable RAM at 0xc000
-		ram_page <=
+	-- 128K has pageable RAM at 0xc000
+	ram_page <=
 			page_ram_sel when cpu_a(15 downto 14) = "11" else -- Selectable bank at 0xc000
 			cpu_a(14) & cpu_a(15 downto 14); -- A=bank: 00=XXX, 01=101, 10=010, 11=XXX
-	end generate;
-	ram_page_plus3: if model = 2 generate
-		-- +3 has various additional modes in addition to "normal" mode, which is
-		-- the same as the 128K
-		-- Extra modes assign RAM banks as follows:
-		-- plus3_page    0000    4000    8000    C000
-		-- 00            0       1       2       3
-		-- 01            4       5       6       7
-		-- 10            4       5       6       3
-		-- 11            4       7       6       3
-		-- NORMAL        ROM     5       2       PAGED
-		ram_page <=
-			page_ram_sel when plus3_special = '0' and cpu_a(15 downto 14) = "11" else
-			cpu_a(14) & cpu_a(15 downto 14) when plus3_special = '0' else
-			"0" & cpu_a(15 downto 14) when plus3_special = '1' and plus3_page = "00" else
-			"1" & cpu_a(15 downto 14) when plus3_special = '1' and plus3_page = "01" else
-			(not(cpu_a(15) and cpu_a(14))) & cpu_a(15 downto 14) when plus3_special = '1' and plus3_page = "10" else
-			(not(cpu_a(15) and cpu_a(14))) & (cpu_a(15) or cpu_a(14)) & cpu_a(14);
-	end generate;
 		
 	-- CPU data bus mux
 	cpu_di <=
@@ -652,33 +632,13 @@ begin
 	FL_CE_N <= '0';
 	FL_OE_N <= '0';
 	FL_WE_N <= '1';
-	rom_48k: if model = 0 generate
-		-- 48K
-		FL_ADDR <= 
+
+	FL_ADDR <= 
 			-- Overlay external ROMs when enabled
 			'0' & ZXMMC_ROM_OFFSET(7 downto 4) & zxmmc_bank(3 downto 0) & cpu_a(13 downto 0)
 			when zxmmc_rd_en = '1' else
 			-- Otherwise access the internal ROM
 			'0' & ROM_OFFSET & cpu_a(13 downto 0);
-	end generate;
-	rom_128k: if model = 1 generate
-		-- 128K
-		FL_ADDR <= 
-			-- Overlay external ROMs when enabled
-			'0' & ZXMMC_ROM_OFFSET(7 downto 4) & zxmmc_bank(3 downto 0) & cpu_a(13 downto 0)
-			when zxmmc_rd_en = '1' else
-			-- Otherwise access the internal ROMs
-			'0' & ROM_OFFSET(7 downto 1) & page_rom_sel & cpu_a(13 downto 0);
-	end generate;
-	rom_plus3: if model = 2 generate
-		-- +3
-		FL_ADDR <= 
-			-- Overlay external ROMs when enabled
-			'0' & ZXMMC_ROM_OFFSET(7 downto 4) & zxmmc_bank(3 downto 0) & cpu_a(13 downto 0)
-			when zxmmc_rd_en = '1' else
-			-- Otherwise access the internal ROMs		
-			'0' & ROM_OFFSET(7 downto 2) & plus3_page(1) & page_rom_sel & cpu_a(13 downto 0);
-	end generate;
 
 	-- SRAM bus
 	SRAM_CE_N <= '0';
