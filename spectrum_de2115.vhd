@@ -139,20 +139,6 @@ port (
 	SRAM_UB_N	:	out		std_logic;
 	SRAM_LB_N	:	out		std_logic;
 	
-	-- SDRAM
-	DRAM_ADDR	:	out		std_logic_vector(12 downto 0);
-	DRAM_DQ		:	inout	std_logic_vector(31 downto 0);
-	DRAM_BA_0	:	in		std_logic;
-	DRAM_BA_1	:	in		std_logic;
-	DRAM_CAS_N	:	in		std_logic;
-	DRAM_CKE	:	in		std_logic;
-	DRAM_CLK	:	in		std_logic;
-	DRAM_CS_N	:	in		std_logic;
-	DRAM_LDQM	:	in		std_logic;
-	DRAM_RAS_N	:	in		std_logic;
-	DRAM_UDQM	:	in		std_logic;
-	DRAM_WE_N	:	in		std_logic;
-	
 	-- Flash
 	FL_ADDR		:	out		std_logic_vector(22 downto 0);
 	FL_DQ		:	inout	std_logic_vector(7 downto 0);
