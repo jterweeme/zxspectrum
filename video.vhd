@@ -1,5 +1,6 @@
 -- ZX Spectrum for Altera DE1
 --
+-- Copyright (c) 2019 Jasper ter Weeme
 -- Copyright (c) 2009-2011 Mike Stirling
 --
 -- All rights reserved
@@ -35,19 +36,18 @@
 -- POSSIBILITY OF SUCH DAMAGE.
 --
 
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.STD_LOGIC_ARITH.ALL;
-use IEEE.STD_LOGIC_UNSIGNED.ALL;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_arith.all;
+use ieee.std_logic_unsigned.all;
 
 entity video is
 port(
-	-- Master clock (28 MHz)
-	CLK			:	in std_logic;
-	-- Video domain clock enable (14 MHz)
-	CLKEN		:	in std_logic;
-	-- Master reset
-	nRESET 		: 	in std_logic;
+    CLK			:	in std_logic;
+    -- Video domain clock enable (14 MHz)
+    CLKEN		:	in std_logic;
+    -- Master reset
+    nRESET 		: 	in std_logic;
 
 	-- Mode
 	VGA			:	in std_logic;
@@ -82,14 +82,14 @@ port(
 end video;
 
 architecture video_arch of video is
-signal		pixels	:	std_logic_vector(9 downto 0);
-signal		attr	:	std_logic_vector(7 downto 0);
+signal pixels: std_logic_vector(9 downto 0);
+signal attr: std_logic_vector(7 downto 0);
 
 -- Video logic runs at 14 MHz so hcounter has an additonal LSb which is
 -- skipped if running in VGA scan-doubled mode.  The value of this
 -- extra bit is 1/2 for the purposes of timing calculations bit 1 is
 -- assumed to have a value of 1.
-signal		hcounter	: std_logic_vector(9 downto 0);
+signal hcounter: std_logic_vector(9 downto 0);
 -- vcounter has an extra LSb as well except this is skipped if running
 -- in PAL mode.  By not skipping it in VGA mode we get the required
 -- double-scanning of each line.  This extra bit has a value 1/2 as well.
@@ -111,131 +111,127 @@ signal		blue		: std_logic;
 signal		bright		: std_logic;
 signal		dot			: std_logic;
 begin
-	-- The first 256 pixels of each line are valid picture
-	picture <= hpicture and vpicture;
-	blanking <= hblanking or vblanking;
+    -- The first 256 pixels of each line are valid picture
+    picture <= hpicture and vpicture;
+    blanking <= hblanking or vblanking;
 
-	-- Generate clocks and enables from internal signals
-	FLASHCLK <= flashcounter(4);
-	IS_VALID <= not blanking;
-	IS_BORDER <= not picture;
-	-- FIXME: This needs to be halved for PAL mode
-	PIXCLK <= CLK and CLKEN and nRESET;
-	
-	-- Output syncs
-	nVSYNC <= not vsync;
-	nHSYNC <= not hsync;
-	nCSYNC <= not (vsync xor hsync);
-	-- Combined HSYNC/CSYNC.  Feeds HSYNC to VGA HSYNC in VGA mode,
-	-- or CSYNC to the same pin in PAL mode
-	nHCSYNC <= not (vsync xor hsync) when VGA = '0' else
-		not hsync;
-	
-	-- Determine the pixel colour
-	dot <= pixels(9) xor (flashcounter(4) and attr(7)); -- Combine delayed pixel with FLASH attr and clock state
-	red <= attr(1) when picture = '1' and dot = '1' else
-		attr(4) when picture = '1' and dot = '0' else
-		BORDER_IN(1) when blanking = '0' else
-		'0';
-	green <= attr(2) when picture = '1' and dot = '1' else
-		attr(5) when picture = '1' and dot = '0' else
-		BORDER_IN(2) when blanking = '0' else
-		'0';
-	blue <= attr(0) when picture = '1' and dot = '1' else
-		attr(3) when picture = '1' and dot = '0' else
-		BORDER_IN(0) when blanking = '0' else
-		'0';
-	bright <= attr(6) when picture = '1' else
-		'0';
-	
-	-- Re-register video output to DACs to clean up edges
-	process(nRESET,CLK)
-	begin
-		if nRESET = '0' then
-			-- Asynchronous clear
-			R <= (others => '0');
-			G <= (others => '0');
-			B <= (others => '0');
-		elsif rising_edge(CLK) then
-			-- Output video to DACs
-			R <= (7 => red, others => bright and red);
-			G <= (7 => green, others => bright and green);
-			B <= (7 => blue, others => bright and blue);
-		end if;
-	end process;
+    -- Generate clocks and enables from internal signals
+    FLASHCLK <= flashcounter(4);
+    IS_VALID <= not blanking;
+    IS_BORDER <= not picture;
+    PIXCLK <= CLK and CLKEN and nRESET;
 
+    -- Output syncs
+    nVSYNC <= not vsync;
+    nHSYNC <= not hsync;
+    nCSYNC <= not (vsync xor hsync);
+    -- Combined HSYNC/CSYNC.  Feeds HSYNC to VGA HSYNC in VGA mode,
+    -- or CSYNC to the same pin in PAL mode
+    nHCSYNC <= not (vsync xor hsync) when VGA = '0' else not hsync;
+	
+    -- Determine the pixel colour
+    -- Combine delayed pixel with FLASH attr and clock state
+    dot <= pixels(9) xor (flashcounter(4) and attr(7)); 
+    red <= attr(1) when picture = '1' and dot = '1' else
+        attr(4) when picture = '1' and dot = '0' else
+        BORDER_IN(1) when blanking = '0' else
+        '0';
+    green <= attr(2) when picture = '1' and dot = '1' else
+        attr(5) when picture = '1' and dot = '0' else
+        BORDER_IN(2) when blanking = '0' else
+        '0';
+    blue <= attr(0) when picture = '1' and dot = '1' else
+        attr(3) when picture = '1' and dot = '0' else
+        BORDER_IN(0) when blanking = '0' else
+        '0';
+    bright <= attr(6) when picture = '1' else
+        '0';
+	
+    -- Re-register video output to DACs to clean up edges
+    process(nRESET,CLK)
+    begin
+        if nRESET = '0' then
+            -- Asynchronous clear
+            R <= (others => '0');
+            G <= (others => '0');
+            B <= (others => '0');
+        elsif rising_edge(CLK) then
+            -- Output video to DACs
+            R <= (7 => red, others => bright and red);
+            G <= (7 => green, others => bright and green);
+            B <= (7 => blue, others => bright and blue);
+        end if;
+    end process;
 
-	-- This is what the contention model is supposed to look like.
-	-- We may need to emulate this to ensure proper compatibility.
-	--
-	-- At vcounter = 0 and hcounter = 0 we are at
-	-- 14336*T since the falling edge of the vsync.
-	-- This is where we start contending RAM access.
-	-- The contention pattern repeats every 8 T states, with
-	-- CPU clock held during the first 6 of every 8 T states
-	-- (where one T state is two ticks of the horizontal counter).
-	-- Two screen bytes are fetched consecutively, display first
-	-- followed by attribute.  The cycle looks like this:
-	-- hcounter[3..1] = 000 Fetch data 1  nWAIT = 0
-	--                  001 Fetch attr 1          0
-	--                  010 Fetch data 2          0
-	--                  011 Fetch attr 2          0
-	--                  100                       1
-	--                  101                       1
-	--                  110                       0
-	--                  111                       0
+    -- This is what the contention model is supposed to look like.
+    -- We may need to emulate this to ensure proper compatibility.
+    --
+    -- At vcounter = 0 and hcounter = 0 we are at
+    -- 14336*T since the falling edge of the vsync.
+    -- This is where we start contending RAM access.
+    -- The contention pattern repeats every 8 T states, with
+    -- CPU clock held during the first 6 of every 8 T states
+    -- (where one T state is two ticks of the horizontal counter).
+    -- Two screen bytes are fetched consecutively, display first
+    -- followed by attribute.  The cycle looks like this:
+    -- hcounter[3..1] = 000 Fetch data 1  nWAIT = 0
+    --                  001 Fetch attr 1          0
+    --                  010 Fetch data 2          0
+    --                  011 Fetch attr 2          0
+    --                  100                       1
+    --                  101                       1
+    --                  110                       0
+    --                  111                       0
 	
-	-- What we actually do is the following, interleaved with CPU RAM access
-	-- so that we don't need any contention:
-	-- hcounter[2..0] = 000 Fetch data (LOAD)
-	--					001 Fetch data (STORE)
-	--					010 Fetch attr (LOAD)
-	--					011 Fetch attr (STORE)
-	--					100 Idle
-	--					101 Idle
-	--					110 Idle
-	--					111 Idle
-	-- The load/store pairs take place over two clock enables.  In VGA mode
-	-- there is one picture/attribute pair fetch per CPU clock enable.  In PAL
-	-- mode every other tick is ignored, so the picture/attribute fetches occur
-	-- on alternate CPU clocks.  At no time must a CPU cycle be allowed to split
-	-- a LOAD/STORE pair, as the bus routing logic will disconnect the memory from
-	-- the CPU during this time.
-	
-	-- RAM address is generated continuously from the counter values
-	-- Pixel fetch takes place when hcounter(2) = 0, attribute when = 1
-	VID_A(12 downto 0) <=
-		-- Picture
-		vcounter(8 downto 7) & vcounter(3 downto 1) & vcounter(6 downto 4) & hcounter(8 downto 4)
-		when hcounter(2) = '0' else
-		-- Attribute
-		"110" & vcounter(8 downto 7) & vcounter(6 downto 4) & hcounter(8 downto 4);
-	
-	-- This timing model is completely uncontended.  CPU runs all the time.
-	nWAIT <= '1';
-	
-	-- First 192 lines are picture
-	vpicture <= not (vcounter(9) or (vcounter(8) and vcounter(7)));
-	
-	process(nRESET,CLK,CLKEN,hcounter,vcounter)
-	begin	
-		if nRESET = '0' then
-			-- Asynchronous master reset
-			hcounter <= (others => '0');
-			vcounter <= (others => '0');
-			flashcounter <= (others => '0');
-			
-			vblanking <= '0';
-			hblanking <= '0';
-			hpicture <= '1';
-			hsync <= '0';
-			vsync <= '0';
-			nIRQ <= '1';
-			nVID_RD <= '1';
-			
-			pixels <= (others => '0');
-			attr <= (others => '0');
-		elsif rising_edge(CLK) and CLKEN = '1' then
+    -- What we actually do is the following, interleaved with CPU RAM access
+    -- so that we don't need any contention:
+    -- hcounter[2..0] = 000 Fetch data (LOAD)
+    --					001 Fetch data (STORE)
+    --					010 Fetch attr (LOAD)
+    --					011 Fetch attr (STORE)
+    --					100 Idle
+    --					101 Idle
+    --					110 Idle
+    --					111 Idle
+    -- The load/store pairs take place over two clock enables.  In VGA mode
+    -- there is one picture/attribute pair fetch per CPU clock enable.  In PAL
+    -- mode every other tick is ignored, so the picture/attribute fetches occur
+    -- on alternate CPU clocks.  At no time must a CPU cycle be allowed to split
+    -- a LOAD/STORE pair, as the bus routing logic will disconnect the memory from
+    -- the CPU during this time.
+
+    -- RAM address is generated continuously from the counter values
+    -- Pixel fetch takes place when hcounter(2) = 0, attribute when = 1
+    VID_A(12 downto 0) <=
+        -- Picture
+        vcounter(8 downto 7) & vcounter(3 downto 1) & vcounter(6 downto 4) & hcounter(8 downto 4)
+        when hcounter(2) = '0' else
+        -- Attribute
+        "110" & vcounter(8 downto 7) & vcounter(6 downto 4) & hcounter(8 downto 4);
+
+    -- This timing model is completely uncontended.  CPU runs all the time.
+    nWAIT <= '1';
+
+    -- First 192 lines are picture
+    vpicture <= not (vcounter(9) or (vcounter(8) and vcounter(7)));
+
+    process(nRESET,CLK,CLKEN,hcounter,vcounter)
+    begin	
+        if nRESET = '0' then
+            -- Asynchronous master reset
+            hcounter <= (others => '0');
+            vcounter <= (others => '0');
+            flashcounter <= (others => '0');
+            vblanking <= '0';
+            hblanking <= '0';
+            hpicture <= '1';
+            hsync <= '0';
+            vsync <= '0';
+            nIRQ <= '1';
+            nVID_RD <= '1';
+            pixels <= (others => '0');
+            attr <= (others => '0');
+        elsif rising_edge(CLK) and CLKEN = '1' then
 			-- Most functions are only performed when hcounter(0) is clear.
 			-- This is the 'half' bit inserted to allow for scan-doubled VGA output.
 			-- In VGA mode the counter will be stepped through the even values only,
@@ -284,23 +280,18 @@ begin
 				end if;
 			end if;
 	
-			-- Step the horizontal counter and check for wrap
-		   if VGA = '1' then				
-				-- Counter wraps after 894 in VGA mode
-				if hcounter = "1101111110" then
-					hcounter <= (others => '0');
+			-- Counter wraps after 894 in VGA mode
+			if hcounter = "1101111110" then
+				hcounter <= (others => '0');
 					-- Increment vertical counter by ones for VGA so that
 					-- lines are double-scanned
-					vcounter <= vcounter + '1';
-				else
-					-- Increment horizontal counter
-					-- Even values only for VGA mode
-					hcounter <= hcounter + "10";
-					hcounter(0) <= '0';
-				end if;
+				vcounter <= vcounter + '1';
 			else
+				-- Increment horizontal counter
+				-- Even values only for VGA mode
+				hcounter <= hcounter + "10";
+            hcounter(0) <= '0';
 			end if;
-			
 	
 			--------------------
 			-- HORIZONTAL
@@ -355,20 +346,19 @@ begin
 				vblanking <= '0';
 			when others =>
 				null;
-			end case;
+            end case;
 
-			-- Wrap vertical counter at line 312-1,
-			-- Top counter value is 623 for VGA, 622 for PAL
-			if vcounter(9 downto 1) = "100110111" then
-			   if (vcounter(0) = '1') then
-				--if (VGA = '1' and vcounter(0) = '1') or VGA = '0' then
-					-- Start of picture area
-					vcounter <= (others => '0');
-					-- Increment the flash counter once per frame
-					flashcounter <= flashcounter + '1';
-				end if;
-			end if;
-		end if;
-	end process;
+            -- Wrap vertical counter at line 312-1,
+            -- Top counter value is 623 for VGA, 622 for PAL
+            if vcounter(9 downto 1) = "100110111" then
+                if (vcounter(0) = '1') then
+                    -- Start of picture area
+                    vcounter <= (others => '0');
+                    -- Increment the flash counter once per frame
+                    flashcounter <= flashcounter + '1';
+                end if;
+            end if;
+        end if;
+    end process;
 end video_arch;
 
