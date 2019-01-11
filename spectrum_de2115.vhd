@@ -46,83 +46,41 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
--- Generic top-level entity for Altera DE2-115 board
 entity spectrum_de2115 is
 generic (
-	-- Model to generate
-	-- 0 = 48 K
-	-- 1 = 128 K
-	-- 2 = +2A/+3
-	MODEL				:	integer := 0;
-	
-	-- ROM offset
-	-- The 4MB Flash is used in 16KB banks as a simple mechanism for
-	-- different machines to address different parts of the ROM, saving
-	-- on re-flashing each time a new machine is run on the board.
-	-- This generic sets the upper 8 address bits.
-	-- Note that the lower bits may be ignored by the implementation,
-	-- e.g. where ROMs are bigger than 16K or where multiple banks
-	-- are required.  In this case it is important to ensure that the
-	-- ROM images are aligned correctly (such that these ignored bits are 0).
-	--
-	-- For the Spectrum the ROMs must be 16K, 32K or 64K aligned for
-	-- the 48K, 128K and +3 respectively
-	-- 48K
     ROM_OFFSET: std_logic_vector(7 downto 0) := "00000000"
     );
-	
+
 port (
-	-- Clocks
-	--CLOCK_24	:	in	std_logic_vector(1 downto 0);
-	--CLOCK_27	:	in	std_logic_vector(1 downto 0);
-	CLOCK_50	:	in	std_logic;
-	EXT_CLOCK	:	in	std_logic;
-	
-	-- Switches
-	SW			:	in	std_logic_vector(9 downto 0);
-	-- Buttons
-	KEY			:	in	std_logic_vector(3 downto 0);
-	
-	-- 7 segment displays
-	HEX0		:	out	std_logic_vector(6 downto 0);
-	HEX1		:	out	std_logic_vector(6 downto 0);
-	HEX2		:	out	std_logic_vector(6 downto 0);
-	HEX3		:	out	std_logic_vector(6 downto 0);
-	-- Red LEDs
-	LEDR		:	out	std_logic_vector(9 downto 0);
-	-- Green LEDs
-	LEDG		:	out	std_logic_vector(7 downto 0);
-	
-	-- VGA
-	VGA_R		:	out	std_logic_vector(7 downto 0);
-	VGA_G		:	out	std_logic_vector(7 downto 0);
-	VGA_B		:	out	std_logic_vector(7 downto 0);
-	VGA_HS		:	out	std_logic;
-	VGA_VS		:	out	std_logic;
-	VGA_BLANK_N	:	out	std_logic;
-	VGA_CLK		:	out std_logic;
-	
-	-- Serial
+    CLOCK_50: in std_logic;
+    EXT_CLOCK: in std_logic;
+    SW: in std_logic_vector(9 downto 0);
+    KEY: in std_logic_vector(3 downto 0);
+    HEX0: out std_logic_vector(6 downto 0);
+    HEX1: out std_logic_vector(6 downto 0);
+    HEX2: out std_logic_vector(6 downto 0);
+    HEX3: out std_logic_vector(6 downto 0);
+	LEDR: out std_logic_vector(9 downto 0);
+	LEDG: out std_logic_vector(7 downto 0);
+	VGA_R: out std_logic_vector(7 downto 0);
+	VGA_G: out std_logic_vector(7 downto 0);
+	VGA_B: out std_logic_vector(7 downto 0);
+	VGA_HS: out std_logic;
+	VGA_VS: out std_logic;
+	VGA_BLANK_N: out std_logic;
+	VGA_CLK: out std_logic;
 	UART_RXD	:	in	std_logic;
 	UART_TXD	:	out	std_logic;
-	
-	-- PS/2 Keyboard
 	PS2_CLK		:	inout	std_logic;
 	PS2_DAT		:	inout	std_logic;
-	
-	-- I2C
 	I2C_SCLK	:	inout	std_logic;
 	I2C_SDAT	:	inout	std_logic;
-	
-	-- Audio
 	AUD_XCK		:	out		std_logic;
 	AUD_BCLK	:	out		std_logic;
 	AUD_ADCLRCK	:	out		std_logic;
 	AUD_ADCDAT	:	in		std_logic;
 	AUD_DACLRCK	:	out		std_logic;
 	AUD_DACDAT	:	out		std_logic;
-	
-	-- SRAM
 	SRAM_ADDR	:	out		std_logic_vector(19 downto 0);
 	SRAM_DQ		:	inout	std_logic_vector(15 downto 0);
 	SRAM_CE_N	:	out		std_logic;
@@ -130,22 +88,12 @@ port (
 	SRAM_WE_N	:	out		std_logic;
 	SRAM_UB_N	:	out		std_logic;
 	SRAM_LB_N	:	out		std_logic;
-	
-	-- Flash
 	FL_ADDR		:	out		std_logic_vector(22 downto 0);
 	FL_DQ		:	inout	std_logic_vector(7 downto 0);
 	FL_RST_N	:	out		std_logic;
 	FL_OE_N		:	out		std_logic;
 	FL_WE_N		:	out		std_logic;
 	FL_CE_N		:	out		std_logic;
-	
-	-- SD card (SPI mode)
-	SD_nCS		:	out		std_logic;
-	SD_MOSI		:	out		std_logic;
-	SD_SCLK		:	out		std_logic;
-	SD_MISO		:	in		std_logic;
-	
-	-- GPIO
 	GPIO		:	inout	std_logic_vector(35 downto 0)
 	);
 end entity;
@@ -170,10 +118,6 @@ component pll_main IS
 	);
 end component;
 
--------------------
--- Clock enables
--------------------
-
 component clocks is
 port (
 	-- 28 MHz master clock
@@ -189,10 +133,6 @@ port (
 	CLKEN_VID		:	out std_logic
 	);
 end component;
-
----------
--- CPU
----------
 
 component T80se is
 	generic(
@@ -351,57 +291,32 @@ generic (
 port (
 	CLK			:	in	std_logic;
 	nRESET		:	in	std_logic;
-	
 	I2C_SCL		:	inout	std_logic;
 	I2C_SDA		:	inout	std_logic;
-	
 	IS_DONE		:	out std_logic;
 	IS_ERROR	:	out	std_logic
 	);
 end component;
 
--- Master clock - 28 MHz
 signal pll_reset		:	std_logic;
 signal pll_locked		:	std_logic;
 signal clock			:	std_logic;
 signal audio_clock		:	std_logic;
 signal reset_n			:	std_logic;
-
--- Clock control
 signal psg_clken		:	std_logic;
 signal cpu_clken		:	std_logic;
 signal vid_clken		:	std_logic;
-
--- Address decoding
 signal ula_enable		:	std_logic; -- all even IO addresses
 signal rom_enable		:	std_logic; -- 0x0000-0x3FFF
 signal ram_enable		:	std_logic; -- 0x4000-0xFFFF
--- 128K extensions
-signal page_enable		:	std_logic; -- all odd IO addresses with A15 and A1 clear (and A14 set in +3 mode)
+signal page_enable: std_logic; -- all odd IO addresses with A15 and A1 clear
 signal psg_enable		:	std_logic; -- all odd IO addresses with A15 set and A1 clear
--- +3 extensions
-signal plus3_enable		:	std_logic; -- A15, A14, A13, A1 clear, A12 set.
-signal zxmmc_enable		:	std_logic; -- A4-A0 set
-
--- 128K paging register (with default values for systems that don't have it)
 signal page_reg_disable	:	std_logic := '1'; -- bit 5
 signal page_rom_sel		:	std_logic := '0'; -- bit 4
 signal page_shadow_scr	:	std_logic := '0'; -- bit 3
 signal page_ram_sel		:	std_logic_vector(2 downto 0) := "000"; -- bits 2:0
-
--- +3 extensions (with default values for systems that don't have it)
-signal plus3_printer_strobe	:	std_logic := '0'; -- bit 4
-signal plus3_disk_motor	:	std_logic := '0'; -- bit 3
-signal plus3_page		:	std_logic_vector(1 downto 0) := "00"; -- bits 2:1
-signal plus3_special	:	std_logic := '0'; -- bit 0
-
--- RAM bank actually being accessed
 signal ram_page			:	std_logic_vector(2 downto 0);
-
--- SRAM bus high/low byte mux
 signal sram_di			:	std_logic_vector(7 downto 0);
-
--- CPU signals
 signal cpu_wait_n	:	std_logic;
 signal cpu_irq_n	:	std_logic;
 signal cpu_nmi_n	:	std_logic;
@@ -417,18 +332,11 @@ signal cpu_busack_n	:	std_logic;
 signal cpu_a		:	std_logic_vector(15 downto 0);
 signal cpu_di		:	std_logic_vector(7 downto 0);
 signal cpu_do		:	std_logic_vector(7 downto 0);
-
--- ULA port signals
 signal ula_do		:	std_logic_vector(7 downto 0);
 signal ula_border	:	std_logic_vector(2 downto 0);
 signal ula_ear_out	:	std_logic;
 signal ula_mic_out	:	std_logic;
 signal ula_ear_in	:	std_logic;
-signal ula_rom_sel	:	std_logic;
-signal ula_shadow_vid	:	std_logic;
-signal ula_ram_page	:	std_logic_vector(2 downto 0);
-
--- ULA video signals
 signal vid_a		:	std_logic_vector(12 downto 0);
 signal vid_di		:	std_logic_vector(7 downto 0);
 signal vid_rd_n		:	std_logic;
@@ -445,11 +353,7 @@ signal vid_is_valid	:	std_logic;
 signal vid_pixclk	:	std_logic;
 signal vid_flashclk	:	std_logic;
 signal vid_irq_n	:	std_logic;
-
--- Keyboard
 signal keyb			:	std_logic_vector(4 downto 0);
-
--- Sound (PSG default values for systems that don't have it)
 signal psg_do		:	std_logic_vector(7 downto 0) := "11111111";
 signal psg_bdir		:	std_logic;
 signal psg_bc1		:	std_logic;
@@ -460,21 +364,10 @@ signal pcm_outr		:	std_logic_vector(15 downto 0);
 signal pcm_inl		:	std_logic_vector(15 downto 0);
 signal pcm_inr		:	std_logic_vector(15 downto 0);
 
-signal zxmmc_do		:	std_logic_vector(7 downto 0);
-signal zxmmc_sclk	:	std_logic;
-signal zxmmc_mosi	:	std_logic;
-signal zxmmc_miso	:	std_logic;
-signal zxmmc_cs0	:	std_logic;
-signal zxmmc_wr_en	:	std_logic;
-signal zxmmc_rd_en	:	std_logic;
-signal zxmmc_rom_nram	:	std_logic;
-signal zxmmc_bank	:	std_logic_vector(4 downto 0);
-
 begin
 	-- 28 MHz master clock
 	pll: pll_main port map (
 		pll_reset,
-		--CLOCK_24(0),
 		CLOCK_50,
 		clock,
 		audio_clock,
@@ -567,7 +460,7 @@ begin
 	page_enable <= (not cpu_ioreq_n) and cpu_a(0) and not (cpu_a(15) or cpu_a(1));
 
 	-- ROM is enabled between 0x0000 and 0x3fff except in +3 special mode
-	rom_enable <= (not cpu_mreq_n) and not (plus3_special or cpu_a(15) or cpu_a(14));
+    rom_enable <= (not cpu_mreq_n) and not (cpu_a(15) or cpu_a(14));
 	-- RAM is enabled for any memory request when ROM isn't enabled
 	ram_enable <= not (cpu_mreq_n or rom_enable);
 	-- 128K has pageable RAM at 0xc000
@@ -590,25 +483,18 @@ begin
 	FL_OE_N <= '0';
 	FL_WE_N <= '1';		
 	FL_ADDR <= '0' & ROM_OFFSET & cpu_a(13 downto 0);
-
-	-- SRAM bus
 	SRAM_CE_N <= '0';
 	SRAM_OE_N <= '0';
-	-- SRAM high/low byte mux
-	sram_di <= SRAM_DQ(15 downto 8) when cpu_a(0) = '1' else
-		SRAM_DQ(7 downto 0); -- CPU data input
-	vid_di <= SRAM_DQ(15 downto 8) when vid_a(0) = '1' else
-		SRAM_DQ(7 downto 0); -- Video data input
+	sram_di <= SRAM_DQ(15 downto 8) when cpu_a(0) = '1' else SRAM_DQ(7 downto 0);
+	vid_di <= SRAM_DQ(15 downto 8) when vid_a(0) = '1' else SRAM_DQ(7 downto 0);
 	
-	-- Synchronous outputs to SRAM
-	process(clock,reset_n)
-	variable ext_ram_write : std_logic; -- External RAM (ZXMMC+)
-	variable int_ram_write : std_logic; -- Internal RAM
-	variable sram_write : std_logic;
-	begin
-		ext_ram_write := (rom_enable and zxmmc_wr_en and not zxmmc_rom_nram) and not cpu_wr_n;
-		int_ram_write := ram_enable and not cpu_wr_n;
-		sram_write := int_ram_write or ext_ram_write;
+    -- Synchronous outputs to SRAM
+    process(clock,reset_n)
+    variable int_ram_write: std_logic;
+    variable sram_write: std_logic;
+    begin
+        int_ram_write := ram_enable and not cpu_wr_n;
+        sram_write := int_ram_write;
 	
 		if reset_n = '0' then
 			SRAM_WE_N <= '1';
@@ -627,14 +513,7 @@ begin
 				SRAM_LB_N <= cpu_a(0);
 				SRAM_WE_N <= not sram_write;
 				if rom_enable = '0' then
-					-- Normal RAM access at 0x4000-0xffff
-					-- 16-bit address
 					SRAM_ADDR <= "0000" & ram_page & cpu_a(13 downto 1);
-				else
-					-- ZXMMC+ external RAM access (16 banks of 16KB)
-					-- at 0x0000-0x3fff
-					-- 16-bit address
-					SRAM_ADDR <= "001" & zxmmc_bank(3 downto 0) & cpu_a(13 downto 1);
 				end if;
 				if sram_write = '1' then
 					SRAM_DQ(15 downto 8) <= cpu_do;
@@ -646,29 +525,21 @@ begin
 				-- we don't bother using the vid_rd_n signal from the ULA
 				-- No writes here so just enable both upper and lower bytes and let
 				-- the bus mux select the right one
-				SRAM_UB_N <= '0';
-				SRAM_LB_N <= '0';
-				SRAM_WE_N <= '1';
-				if page_shadow_scr = '1' then
-					-- Video from bank 7 (128K/+3)
-					-- 16-bit address, LSb selects high/low byte
-					SRAM_ADDR <= "00001110" & vid_a(12 downto 1);
-				else
-					-- Video from bank 5
-					-- 16-bit address, LSb selects high/low byte
-					SRAM_ADDR <= "00001010" & vid_a(12 downto 1);
-				end if;
-			end if;
-		end if;
-	end process;
-	
-	pcm_outl <= ula_ear_out & psg_aout & ula_mic_out & "000000";
-	pcm_outr <= ula_ear_out & psg_aout & ula_mic_out & "000000";
-	
-	-- Hysteresis for EAR input (should help reliability)
-	process(clock)
-	variable in_val : integer;
-	begin
+                SRAM_UB_N <= '0';
+                SRAM_LB_N <= '0';
+                SRAM_WE_N <= '1';
+                SRAM_ADDR <= "00001010" & vid_a(12 downto 1);
+            end if;
+        end if;
+    end process;
+
+    pcm_outl <= ula_ear_out & psg_aout & ula_mic_out & "000000";
+    pcm_outr <= ula_ear_out & psg_aout & ula_mic_out & "000000";
+
+    -- Hysteresis for EAR input (should help reliability)
+    process(clock)
+    variable in_val : integer;
+    begin
 		in_val := to_integer(signed(pcm_inl));
 		
 		if rising_edge(clock) then
@@ -681,13 +552,13 @@ begin
 	end process;
 	
 	-- Connect ULA to video output
-	VGA_R <= vid_r_out;
-	VGA_G <= vid_g_out;
-	VGA_B <= vid_b_out;
-	VGA_HS <= vid_hcsync_n;
-	VGA_VS <= vid_vsync_n;
-	VGA_BLANK_N <= vid_is_valid;
-	VGA_CLK <= vid_pixclk;
+    VGA_R <= vid_r_out;
+    VGA_G <= vid_g_out;
+    VGA_B <= vid_b_out;
+    VGA_HS <= vid_hcsync_n;
+    VGA_VS <= vid_vsync_n;
+    VGA_BLANK_N <= vid_is_valid;
+    VGA_CLK <= vid_pixclk;
 end architecture;
 
 
