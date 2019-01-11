@@ -536,7 +536,7 @@ begin
 		
 	vid: video port map (
 		clock, vid_clken, reset_n,
-		SW(7),
+		'1',
 		vid_a, vid_di, vid_rd_n, vid_wait_n,
 		ula_border,
 		vid_r_out, vid_g_out, vid_b_out,

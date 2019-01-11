@@ -285,7 +285,7 @@ begin
 			end if;
 	
 			-- Step the horizontal counter and check for wrap
-			if VGA = '1' then				
+		   if VGA = '1' then				
 				-- Counter wraps after 894 in VGA mode
 				if hcounter = "1101111110" then
 					hcounter <= (others => '0');
@@ -298,18 +298,7 @@ begin
 					hcounter <= hcounter + "10";
 					hcounter(0) <= '0';
 				end if;
-			else			
-				-- Counter wraps after 895 in PAL mode
-				if hcounter = "1101111111" then
-					hcounter <= (others => '0');
-					-- Increment vertical counter by even values for PAL
-					vcounter <= vcounter + "10";
-					vcounter(0) <= '0';
-				else
-					-- Increment horizontal counter
-					-- All values for PAL mode
-					hcounter <= hcounter + '1';
-				end if;
+			else
 			end if;
 			
 	
@@ -371,7 +360,8 @@ begin
 			-- Wrap vertical counter at line 312-1,
 			-- Top counter value is 623 for VGA, 622 for PAL
 			if vcounter(9 downto 1) = "100110111" then
-				if (VGA = '1' and vcounter(0) = '1') or VGA = '0' then
+			   if (vcounter(0) = '1') then
+				--if (VGA = '1' and vcounter(0) = '1') or VGA = '0' then
 					-- Start of picture area
 					vcounter <= (others => '0');
 					-- Increment the flash counter once per frame
