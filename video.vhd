@@ -43,14 +43,14 @@ use ieee.std_logic_unsigned.all;
 
 entity video is
 port(
-    CLK			:	in std_logic;
+    CLK: in std_logic;
     -- Video domain clock enable (14 MHz)
-    CLKEN		:	in std_logic;
+    CLKEN: in std_logic;
     -- Master reset
-    nRESET 		: 	in std_logic;
+    nRESET: in std_logic;
 
-	-- Mode
-	VGA			:	in std_logic;
+    -- Mode
+    --VGA: in std_logic;
 
 	-- Memory interface
 	VID_A		:	out	std_logic_vector(12 downto 0);
@@ -127,7 +127,7 @@ begin
     nCSYNC <= not (vsync xor hsync);
     -- Combined HSYNC/CSYNC.  Feeds HSYNC to VGA HSYNC in VGA mode,
     -- or CSYNC to the same pin in PAL mode
-    nHCSYNC <= not (vsync xor hsync) when VGA = '0' else not hsync;
+    nHCSYNC <= not hsync;
 	
     -- Determine the pixel colour
     -- Combine delayed pixel with FLASH attr and clock state

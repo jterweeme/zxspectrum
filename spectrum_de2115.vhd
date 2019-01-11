@@ -42,9 +42,9 @@
 --
 -- (C) 2014 Stephen Eddy
 
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.NUMERIC_STD.ALL;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 -- Generic top-level entity for Altera DE2-115 board
 entity spectrum_de2115 is
@@ -68,16 +68,8 @@ generic (
 	-- For the Spectrum the ROMs must be 16K, 32K or 64K aligned for
 	-- the 48K, 128K and +3 respectively
 	-- 48K
-	ROM_OFFSET			:	std_logic_vector(7 downto 0) := "00000000";
-	-- 128K
-	--ROM_OFFSET			:	std_logic_vector(7 downto 0) := "00000010";
-	-- +3
-	--ROM_OFFSET			:	std_logic_vector(7 downto 0) := "00000100";
-	
-	-- ROM offset for ZXMMC+ external Flash banks
-	-- Currently we decode 16 banks (256K) so this must be 256K aligned
-	ZXMMC_ROM_OFFSET	:	std_logic_vector(7 downto 0) := "00010000"
-	);
+    ROM_OFFSET: std_logic_vector(7 downto 0) := "00000000"
+    );
 	
 port (
 	-- Clocks
@@ -260,7 +252,7 @@ port(
 	nRESET 		: 	in std_logic;
 
 	-- Mode
-	VGA			:	in std_logic;
+	--VGA			:	in std_logic;
 
 	-- Memory interface
 	VID_A		:	out	std_logic_vector(12 downto 0);
@@ -536,7 +528,6 @@ begin
 		
 	vid: video port map (
 		clock, vid_clken, reset_n,
-		'1',
 		vid_a, vid_di, vid_rd_n, vid_wait_n,
 		ula_border,
 		vid_r_out, vid_g_out, vid_b_out,
