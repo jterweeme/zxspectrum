@@ -53,49 +53,48 @@ generic (
 
 port (
     CLOCK_50: in std_logic;
-    EXT_CLOCK: in std_logic;
     SW: in std_logic_vector(9 downto 0);
     KEY: in std_logic_vector(3 downto 0);
     HEX0: out std_logic_vector(6 downto 0);
     HEX1: out std_logic_vector(6 downto 0);
     HEX2: out std_logic_vector(6 downto 0);
     HEX3: out std_logic_vector(6 downto 0);
-	LEDR: out std_logic_vector(9 downto 0);
-	LEDG: out std_logic_vector(7 downto 0);
-	VGA_R: out std_logic_vector(7 downto 0);
-	VGA_G: out std_logic_vector(7 downto 0);
-	VGA_B: out std_logic_vector(7 downto 0);
-	VGA_HS: out std_logic;
-	VGA_VS: out std_logic;
-	VGA_BLANK_N: out std_logic;
-	VGA_CLK: out std_logic;
-	UART_RXD	:	in	std_logic;
-	UART_TXD	:	out	std_logic;
-	PS2_CLK		:	inout	std_logic;
-	PS2_DAT		:	inout	std_logic;
-	I2C_SCLK	:	inout	std_logic;
-	I2C_SDAT	:	inout	std_logic;
-	AUD_XCK		:	out		std_logic;
-	AUD_BCLK	:	out		std_logic;
-	AUD_ADCLRCK	:	out		std_logic;
-	AUD_ADCDAT	:	in		std_logic;
-	AUD_DACLRCK	:	out		std_logic;
-	AUD_DACDAT	:	out		std_logic;
-	SRAM_ADDR	:	out		std_logic_vector(19 downto 0);
-	SRAM_DQ		:	inout	std_logic_vector(15 downto 0);
-	SRAM_CE_N	:	out		std_logic;
-	SRAM_OE_N	:	out		std_logic;
-	SRAM_WE_N	:	out		std_logic;
-	SRAM_UB_N	:	out		std_logic;
-	SRAM_LB_N	:	out		std_logic;
-	FL_ADDR		:	out		std_logic_vector(22 downto 0);
-	FL_DQ		:	inout	std_logic_vector(7 downto 0);
-	FL_RST_N	:	out		std_logic;
-	FL_OE_N		:	out		std_logic;
-	FL_WE_N		:	out		std_logic;
-	FL_CE_N		:	out		std_logic;
-	GPIO		:	inout	std_logic_vector(35 downto 0)
-	);
+    LEDR: out std_logic_vector(9 downto 0);
+    LEDG: out std_logic_vector(7 downto 0);
+    VGA_R: out std_logic_vector(7 downto 0);
+    VGA_G: out std_logic_vector(7 downto 0);
+    VGA_B: out std_logic_vector(7 downto 0);
+    VGA_HS: out std_logic;
+    VGA_VS: out std_logic;
+    VGA_BLANK_N: out std_logic;
+    VGA_CLK: out std_logic;
+    UART_RXD: in std_logic;
+    UART_TXD: out std_logic;
+    PS2_CLK: inout std_logic;
+    PS2_DAT: inout std_logic;
+    I2C_SCLK: inout std_logic;
+    I2C_SDAT: inout std_logic;
+    AUD_XCK: out std_logic;
+    AUD_BCLK: out std_logic;
+    AUD_ADCLRCK: out std_logic;
+    AUD_ADCDAT: in std_logic;
+    AUD_DACLRCK: out std_logic;
+    AUD_DACDAT: out std_logic;
+    SRAM_ADDR: out std_logic_vector(19 downto 0);
+    SRAM_DQ: inout std_logic_vector(15 downto 0);
+    SRAM_CE_N: out std_logic;
+    SRAM_OE_N: out std_logic;
+    SRAM_WE_N: out std_logic;
+    SRAM_UB_N: out std_logic;
+    SRAM_LB_N: out std_logic;
+    FL_ADDR: out std_logic_vector(22 downto 0);
+    FL_DQ: inout std_logic_vector(7 downto 0);
+    FL_RST_N: out std_logic;
+    FL_OE_N: out std_logic;
+    FL_WE_N: out std_logic;
+    FL_CE_N: out std_logic;
+    GPIO: inout std_logic_vector(35 downto 0)
+    );
 end entity;
 
 architecture rtl of spectrum_de2115 is
@@ -236,22 +235,22 @@ end component;
 
 component i2s_intf is
 generic(
-	mclk_rate : positive := 12000000;
-	sample_rate : positive := 8000;
-	preamble : positive := 1; -- I2S
-	word_length : positive := 16
-	);
+    mclk_rate : positive := 12000000;
+    sample_rate : positive := 8000;
+    preamble : positive := 1; -- I2S
+    word_length : positive := 16
+    );
 
 port (
-	-- 2x MCLK in (e.g. 24 MHz for WM8731 USB mode)
-	CLK			:	in	std_logic;
-	nRESET		:	in	std_logic;
-	
-	-- Parallel IO
-	PCM_INL		:	out	std_logic_vector(word_length - 1 downto 0);
-	PCM_INR		:	out	std_logic_vector(word_length - 1 downto 0);
-	PCM_OUTL	:	in	std_logic_vector(word_length - 1 downto 0);
-	PCM_OUTR	:	in	std_logic_vector(word_length - 1 downto 0);
+    -- 2x MCLK in (e.g. 24 MHz for WM8731 USB mode)
+    CLK: in std_logic;
+    nRESET: in std_logic;
+
+    -- Parallel IO
+    PCM_INL :out std_logic_vector(word_length - 1 downto 0);
+    PCM_INR: out std_logic_vector(word_length - 1 downto 0);
+    PCM_OUTL: in std_logic_vector(word_length - 1 downto 0);
+    PCM_OUTR: in std_logic_vector(word_length - 1 downto 0);
 	
 	-- Codec interface (right justified mode)
 	-- MCLK is generated at half of the CLK input
@@ -298,8 +297,8 @@ port (
 	);
 end component;
 
-signal pll_reset		:	std_logic;
-signal pll_locked		:	std_logic;
+signal pll_reset: std_logic;
+signal pll_locked: std_logic;
 signal clock			:	std_logic;
 signal audio_clock		:	std_logic;
 signal reset_n			:	std_logic;
@@ -365,129 +364,129 @@ signal pcm_inl		:	std_logic_vector(15 downto 0);
 signal pcm_inr		:	std_logic_vector(15 downto 0);
 
 begin
-	-- 28 MHz master clock
-	pll: pll_main port map (
-		pll_reset,
-		CLOCK_50,
-		clock,
-		audio_clock,
-		pll_locked
-		);
+    -- 28 MHz master clock
+    pll: pll_main port map (
+        pll_reset,
+        CLOCK_50,
+        clock,
+        audio_clock,
+        pll_locked
+        );
 		
-	-- Clock enable logic
-	clken: clocks port map (
-		clock,
-		reset_n,
-		psg_clken,
-		cpu_clken,
-		vid_clken
-		);
+    -- Clock enable logic
+    clken: clocks port map (
+        clock,
+        reset_n,
+        psg_clken,
+        cpu_clken,
+        vid_clken
+        );
 		
-	-- CPU
-	cpu: T80se port map (
-		reset_n, clock, cpu_clken, 
-		cpu_wait_n,
-		cpu_irq_n, 
-		cpu_nmi_n,
-		cpu_busreq_n, cpu_m1_n,
-		cpu_mreq_n, cpu_ioreq_n,
-		cpu_rd_n, cpu_wr_n,
-		cpu_rfsh_n, cpu_halt_n, cpu_busack_n,
-		cpu_a, cpu_di, cpu_do
-		);
-	-- VSYNC interrupt routed to CPU
-	cpu_irq_n <= vid_irq_n;
-	-- Unused CPU input signals
-	cpu_wait_n <= '1';
-	cpu_nmi_n <= '1';
-	cpu_busreq_n <= '1';
-		
-	kb: keyboard port map (
-		clock, reset_n,
-		PS2_CLK, PS2_DAT,
-		cpu_a, keyb);
-
-	GPIO(7) <= PS2_CLK;
-	GPIO(9) <= PS2_DAT;
+    -- CPU
+    cpu: T80se port map (
+        reset_n, clock, cpu_clken, 
+        cpu_wait_n,
+        cpu_irq_n, 
+        cpu_nmi_n,
+        cpu_busreq_n, cpu_m1_n,
+        cpu_mreq_n, cpu_ioreq_n,
+        cpu_rd_n, cpu_wr_n,
+        cpu_rfsh_n, cpu_halt_n, cpu_busack_n,
+        cpu_a, cpu_di, cpu_do
+        );
+    -- VSYNC interrupt routed to CPU
+    cpu_irq_n <= vid_irq_n;
+    -- Unused CPU input signals
+    cpu_wait_n <= '1';
+    cpu_nmi_n <= '1';
+    cpu_busreq_n <= '1';
 	
-	ula: ula_port port map (
-		clock, reset_n,
-		cpu_do, ula_do,
-		ula_enable, cpu_wr_n,
-		ula_border,
-		ula_ear_out, ula_mic_out,
-		keyb,
-		ula_ear_in);
-		
-	vid: video port map (
-		clock, vid_clken, reset_n,
-		vid_a, vid_di, vid_rd_n, vid_wait_n,
-		ula_border,
-		vid_r_out, vid_g_out, vid_b_out,
-		vid_vsync_n, vid_hsync_n,
-		vid_csync_n, vid_hcsync_n,
-		vid_is_border, vid_is_valid,
-		vid_pixclk, vid_flashclk,
-		vid_irq_n);
-		
-	i2s: i2s_intf port map (
-		audio_clock, reset_n,
-		pcm_inl, pcm_inr,
-		pcm_outl, pcm_outr,
-		AUD_XCK, pcm_lrclk,
-		AUD_BCLK, AUD_DACDAT, AUD_ADCDAT);
-		
-	AUD_DACLRCK <= pcm_lrclk;
-	AUD_ADCLRCK <= pcm_lrclk;
-	
-	i2c: i2c_loader 
-		generic map (
-			log2_divider => 7
-		)
-		port map (
-			clock, reset_n,
-			I2C_SCLK, I2C_SDAT,
-			LEDR(1), -- IS_DONE
-			LEDR(0) -- IS_ERROR
-		);
-		
-	-- Asynchronous reset
-	-- PLL is reset by external reset switch
-	pll_reset <= not SW(9);
-	reset_n <= not (pll_reset or not pll_locked);
-	ula_enable <= (not cpu_ioreq_n) and not cpu_a(0); -- all even IO addresses
-	psg_enable <= (not cpu_ioreq_n) and cpu_a(0) and cpu_a(15) and not cpu_a(1);
-	page_enable <= (not cpu_ioreq_n) and cpu_a(0) and not (cpu_a(15) or cpu_a(1));
+    kb: keyboard port map (
+        clock, reset_n,
+        PS2_CLK, PS2_DAT,
+        cpu_a, keyb);
 
-	-- ROM is enabled between 0x0000 and 0x3fff except in +3 special mode
+    GPIO(7) <= PS2_CLK;
+    GPIO(9) <= PS2_DAT;
+
+    ula: ula_port port map (
+        clock, reset_n,
+        cpu_do, ula_do,
+        ula_enable, cpu_wr_n,
+        ula_border,
+        ula_ear_out, ula_mic_out,
+        keyb,
+        ula_ear_in);
+		
+    vid: video port map (
+        clock, vid_clken, reset_n,
+        vid_a, vid_di, vid_rd_n, vid_wait_n,
+        ula_border,
+        vid_r_out, vid_g_out, vid_b_out,
+        vid_vsync_n, vid_hsync_n,
+        vid_csync_n, vid_hcsync_n,
+        vid_is_border, vid_is_valid,
+        vid_pixclk, vid_flashclk,
+        vid_irq_n);
+		
+    i2s: i2s_intf port map (
+        audio_clock, reset_n,
+        pcm_inl, pcm_inr,
+        pcm_outl, pcm_outr,
+        AUD_XCK, pcm_lrclk,
+        AUD_BCLK, AUD_DACDAT, AUD_ADCDAT);
+
+    AUD_DACLRCK <= pcm_lrclk;
+    AUD_ADCLRCK <= pcm_lrclk;
+
+    i2c: i2c_loader 
+        generic map (
+            log2_divider => 7
+        )
+        port map (
+            clock, reset_n,
+            I2C_SCLK, I2C_SDAT,
+            LEDR(1), -- IS_DONE
+            LEDR(0) -- IS_ERROR
+        );
+
+    -- Asynchronous reset
+    -- PLL is reset by external reset switch
+    pll_reset <= not SW(9);
+    reset_n <= not (pll_reset or not pll_locked);
+    ula_enable <= (not cpu_ioreq_n) and not cpu_a(0); -- all even IO addresses
+    psg_enable <= (not cpu_ioreq_n) and cpu_a(0) and cpu_a(15) and not cpu_a(1);
+    page_enable <= (not cpu_ioreq_n) and cpu_a(0) and not (cpu_a(15) or cpu_a(1));
+
+    -- ROM is enabled between 0x0000 and 0x3fff except in +3 special mode
     rom_enable <= (not cpu_mreq_n) and not (cpu_a(15) or cpu_a(14));
-	-- RAM is enabled for any memory request when ROM isn't enabled
-	ram_enable <= not (cpu_mreq_n or rom_enable);
-	-- 128K has pageable RAM at 0xc000
-	ram_page <=
-			page_ram_sel when cpu_a(15 downto 14) = "11" else -- Selectable bank at 0xc000
-			cpu_a(14) & cpu_a(15 downto 14); -- A=bank: 00=XXX, 01=101, 10=010, 11=XXX
-		
-	-- CPU data bus mux
-	cpu_di <=
-		sram_di when ram_enable = '1' else
-		FL_DQ when rom_enable = '1' else
-		ula_do when ula_enable = '1' else
-		psg_do when psg_enable = '1' else
-		(others => '1');
+    -- RAM is enabled for any memory request when ROM isn't enabled
+    ram_enable <= not (cpu_mreq_n or rom_enable);
+    -- 128K has pageable RAM at 0xc000
+    ram_page <=
+            page_ram_sel when cpu_a(15 downto 14) = "11" else -- Selectable bank at 0xc000
+            cpu_a(14) & cpu_a(15 downto 14); -- A=bank: 00=XXX, 01=101, 10=010, 11=XXX
+
+    -- CPU data bus mux
+    cpu_di <=
+        sram_di when ram_enable = '1' else
+        FL_DQ when rom_enable = '1' else
+        ula_do when ula_enable = '1' else
+        psg_do when psg_enable = '1' else
+        (others => '1');
 	
-	-- ROMs are in external flash starting at 0x20000
-	-- (lower addresses contain the BBC ROMs)
-	FL_RST_N <= reset_n;
-	FL_CE_N <= '0';
-	FL_OE_N <= '0';
-	FL_WE_N <= '1';		
-	FL_ADDR <= '0' & ROM_OFFSET & cpu_a(13 downto 0);
-	SRAM_CE_N <= '0';
-	SRAM_OE_N <= '0';
-	sram_di <= SRAM_DQ(15 downto 8) when cpu_a(0) = '1' else SRAM_DQ(7 downto 0);
-	vid_di <= SRAM_DQ(15 downto 8) when vid_a(0) = '1' else SRAM_DQ(7 downto 0);
-	
+    -- ROMs are in external flash starting at 0x20000
+    -- (lower addresses contain the BBC ROMs)
+    FL_RST_N <= reset_n;
+    FL_CE_N <= '0';
+    FL_OE_N <= '0';
+    FL_WE_N <= '1';		
+    FL_ADDR <= '0' & ROM_OFFSET & cpu_a(13 downto 0);
+    SRAM_CE_N <= '0';
+    SRAM_OE_N <= '0';
+    sram_di <= SRAM_DQ(15 downto 8) when cpu_a(0) = '1' else SRAM_DQ(7 downto 0);
+    vid_di <= SRAM_DQ(15 downto 8) when vid_a(0) = '1' else SRAM_DQ(7 downto 0);
+
     -- Synchronous outputs to SRAM
     process(clock,reset_n)
     variable int_ram_write: std_logic;
@@ -495,36 +494,36 @@ begin
     begin
         int_ram_write := ram_enable and not cpu_wr_n;
         sram_write := int_ram_write;
-	
-		if reset_n = '0' then
-			SRAM_WE_N <= '1';
-			SRAM_UB_N <= '1';
-			SRAM_LB_N <= '1';
-			SRAM_DQ <= (others => 'Z');
-		elsif rising_edge(clock) then
-			-- Default to inputs
-			SRAM_DQ <= (others => 'Z');
-			
-			-- Register SRAM signals to outputs (clock must be at least 2x CPU clock)
-			if vid_clken = '1' then
-				-- Fetch data from previous CPU cycle
-				-- Select upper or lower byte depending on LSb of address
-				SRAM_UB_N <= not cpu_a(0);
-				SRAM_LB_N <= cpu_a(0);
-				SRAM_WE_N <= not sram_write;
-				if rom_enable = '0' then
-					SRAM_ADDR <= "0000" & ram_page & cpu_a(13 downto 1);
-				end if;
-				if sram_write = '1' then
-					SRAM_DQ(15 downto 8) <= cpu_do;
-					SRAM_DQ(7 downto 0) <= cpu_do;
-				end if;
-			else
-				-- Fetch data from previous display cycle
-				-- Because we have time division instead of bus contention
-				-- we don't bother using the vid_rd_n signal from the ULA
-				-- No writes here so just enable both upper and lower bytes and let
-				-- the bus mux select the right one
+
+        if reset_n = '0' then
+            SRAM_WE_N <= '1';
+            SRAM_UB_N <= '1';
+            SRAM_LB_N <= '1';
+            SRAM_DQ <= (others => 'Z');
+        elsif rising_edge(clock) then
+            -- Default to inputs
+            SRAM_DQ <= (others => 'Z');
+
+            -- Register SRAM signals to outputs (clock must be at least 2x CPU clock)
+            if vid_clken = '1' then
+                -- Fetch data from previous CPU cycle
+                -- Select upper or lower byte depending on LSb of address
+                SRAM_UB_N <= not cpu_a(0);
+                SRAM_LB_N <= cpu_a(0);
+                SRAM_WE_N <= not sram_write;
+                if rom_enable = '0' then
+                    SRAM_ADDR <= "0000" & ram_page & cpu_a(13 downto 1);
+                end if;
+                if sram_write = '1' then
+                    SRAM_DQ(15 downto 8) <= cpu_do;
+                    SRAM_DQ(7 downto 0) <= cpu_do;
+                end if;
+            else
+                -- Fetch data from previous display cycle
+                -- Because we have time division instead of bus contention
+                -- we don't bother using the vid_rd_n signal from the ULA
+                -- No writes here so just enable both upper and lower bytes and let
+                -- the bus mux select the right one
                 SRAM_UB_N <= '0';
                 SRAM_LB_N <= '0';
                 SRAM_WE_N <= '1';
@@ -540,18 +539,18 @@ begin
     process(clock)
     variable in_val : integer;
     begin
-		in_val := to_integer(signed(pcm_inl));
-		
-		if rising_edge(clock) then
-			if in_val < -15 then
-				ula_ear_in <= '0';
-			elsif in_val > 15 then
-				ula_ear_in <= '1';
-			end if;
-		end if;
-	end process;
-	
-	-- Connect ULA to video output
+        in_val := to_integer(signed(pcm_inl));
+
+        if rising_edge(clock) then
+            if in_val < -15 then
+                ula_ear_in <= '0';
+            elsif in_val > 15 then
+                ula_ear_in <= '1';
+            end if;
+        end if;
+    end process;
+
+    -- Connect ULA to video output
     VGA_R <= vid_r_out;
     VGA_G <= vid_g_out;
     VGA_B <= vid_b_out;
