@@ -54,7 +54,6 @@ generic (
 port (
     CLOCK_50: in std_logic;
     SW: in std_logic_vector(9 downto 0);
-    KEY: in std_logic_vector(3 downto 0);
     HEX0: out std_logic_vector(6 downto 0);
     HEX1: out std_logic_vector(6 downto 0);
     HEX2: out std_logic_vector(6 downto 0);
@@ -68,7 +67,6 @@ port (
     VGA_VS: out std_logic;
     VGA_BLANK_N: out std_logic;
     VGA_CLK: out std_logic;
-    UART_RXD: in std_logic;
     UART_TXD: out std_logic;
     PS2_CLK: inout std_logic;
     PS2_DAT: inout std_logic;
@@ -93,7 +91,8 @@ port (
     FL_OE_N: out std_logic;
     FL_WE_N: out std_logic;
     FL_CE_N: out std_logic;
-    GPIO: inout std_logic_vector(35 downto 0)
+    GPIO: out std_logic_vector(34 downto 0);
+	 EAR_IN: in std_logic
     );
 end entity;
 
@@ -107,130 +106,110 @@ architecture rtl of spectrum_de2115 is
 --------------------------------
 
 component pll_main IS
-	PORT
-	(
-		areset		: IN STD_LOGIC  := '0';
-		inclk0		: IN STD_LOGIC  := '0';
-		c0		: OUT STD_LOGIC ;
-		c1		: OUT STD_LOGIC ;
-		locked		: OUT STD_LOGIC 
-	);
+    PORT
+    (
+        areset: in std_logic := '0';
+        inclk0: in std_logic := '0';
+        c0: out std_logic;
+        c1: out std_logic;
+        locked: out std_logic 
+    );
 end component;
 
 component clocks is
 port (
-	-- 28 MHz master clock
-	CLK				:	in std_logic;
-	-- Master reset
-	nRESET			:	in std_logic;
-	
-	-- 1.75 MHz clock enable for sound
-	CLKEN_PSG		:	out	std_logic;
-	-- 3.5 MHz clock enable (1 in 8)
-	CLKEN_CPU		:	out std_logic;
-	-- 14 MHz clock enable (out of phase with CPU)
-	CLKEN_VID		:	out std_logic
-	);
+    -- 28 MHz master clock
+    CLK: in std_logic;
+    -- Master reset
+    nRESET: in std_logic;
+
+    -- 1.75 MHz clock enable for sound
+    CLKEN_PSG: out std_logic;
+    -- 3.5 MHz clock enable (1 in 8)
+    CLKEN_CPU: out std_logic;
+    -- 14 MHz clock enable (out of phase with CPU)
+    CLKEN_VID: out std_logic
+    );
 end component;
 
 component T80se is
-	generic(
-		Mode : integer := 0;    -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
-		T2Write : integer := 0;  -- 0 => WR_n active in T3, /=0 => WR_n active in T2
-		IOWait : integer := 1   -- 0 => Single cycle I/O, 1 => Std I/O cycle
-	);
-	port(
-		RESET_n         : in  std_logic;
-		CLK_n           : in  std_logic;
-		CLKEN           : in  std_logic;
-		WAIT_n          : in  std_logic;
-		INT_n           : in  std_logic;
-		NMI_n           : in  std_logic;
-		BUSRQ_n         : in  std_logic;
-		M1_n            : out std_logic;
-		MREQ_n          : out std_logic;
-		IORQ_n          : out std_logic;
-		RD_n            : out std_logic;
-		WR_n            : out std_logic;
-		RFSH_n          : out std_logic;
-		HALT_n          : out std_logic;
-		BUSAK_n         : out std_logic;
-		A               : out std_logic_vector(15 downto 0);
-		DI              : in  std_logic_vector(7 downto 0);
-		DO              : out std_logic_vector(7 downto 0)
-	);
+    generic(
+        Mode: integer := 0;    -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
+        T2Write: integer := 0;  -- 0 => WR_n active in T3, /=0 => WR_n active in T2
+        IOWait: integer := 1   -- 0 => Single cycle I/O, 1 => Std I/O cycle
+    );
+    port(
+        RESET_n         : in  std_logic;
+        CLK_n           : in  std_logic;
+        CLKEN           : in  std_logic;
+        WAIT_n          : in  std_logic;
+        INT_n           : in  std_logic;
+        NMI_n           : in  std_logic;
+        BUSRQ_n         : in  std_logic;
+        M1_n            : out std_logic;
+        MREQ_n          : out std_logic;
+        IORQ_n          : out std_logic;
+        RD_n            : out std_logic;
+        WR_n            : out std_logic;
+        RFSH_n          : out std_logic;
+        HALT_n          : out std_logic;
+        BUSAK_n         : out std_logic;
+        A               : out std_logic_vector(15 downto 0);
+        DI              : in  std_logic_vector(7 downto 0);
+        DO              : out std_logic_vector(7 downto 0)
+    );
 end component;
 
 component ula_port is
 port (
-	CLK		:	in	std_logic;
-	nRESET	:	in	std_logic;
-	
-	-- CPU interface with separate read/write buses
-	D_IN	:	in	std_logic_vector(7 downto 0);
-	D_OUT	:	out	std_logic_vector(7 downto 0);
-	ENABLE	:	in	std_logic;
-	nWR		:	in	std_logic;
-	
-	BORDER_OUT	:	out	std_logic_vector(2 downto 0);
-	EAR_OUT		:	out	std_logic;
-	MIC_OUT		:	out std_logic;
-	
-	KEYB_IN		:	in 	std_logic_vector(4 downto 0);
-	EAR_IN		:	in	std_logic	
-	);
+    CLK: in std_logic;
+    nRESET: in std_logic;
+    D_IN: in std_logic_vector(7 downto 0);
+    D_OUT: out std_logic_vector(7 downto 0);
+    ENABLE: in std_logic;
+    nWR: in std_logic;
+    BORDER_OUT: out std_logic_vector(2 downto 0);
+    EAR_OUT: out std_logic;
+    MIC_OUT: out std_logic;
+    KEYB_IN: in std_logic_vector(4 downto 0);
+    EAR_IN: in std_logic
+    );
 end component;
 
 component video is
 port(
-	-- Master clock (28 MHz)
-	CLK			:	in std_logic;
-	-- Video domain clock enable (14 MHz)
-	CLKEN		:	in std_logic;
-	-- Master reset
-	nRESET 		: 	in std_logic;
-
-	-- Mode
-	--VGA			:	in std_logic;
-
-	-- Memory interface
-	VID_A		:	out	std_logic_vector(12 downto 0);
-	VID_D_IN	:	in	std_logic_vector(7 downto 0);
-	nVID_RD	:	out	std_logic;
-	nWAIT		:	out	std_logic;
-	
-	-- IO interface
-	BORDER_IN	:	in	std_logic_vector(2 downto 0);
-
-	-- Video outputs
-	R			:	out	std_logic_vector(7 downto 0);
-	G			:	out	std_logic_vector(7 downto 0);
-	B			:	out	std_logic_vector(7 downto 0);
-	nVSYNC		:	out std_logic;
-	nHSYNC		:	out std_logic;
-	nCSYNC		:	out	std_logic;
-	nHCSYNC		:	out std_logic;
-	IS_BORDER	: 	out std_logic;
-	IS_VALID	:	out std_logic;
-	
-	-- Clock outputs, might be useful
-	PIXCLK		:	out std_logic;
-	FLASHCLK	: 	out std_logic;
-	
-	-- Interrupt to CPU (asserted for 32 T-states, 64 ticks)
-	nIRQ		:	out	std_logic
+    CLK: in std_logic;
+    CLKEN: in std_logic;
+    nRESET: in std_logic;
+    VID_A: out std_logic_vector(12 downto 0);
+    VID_D_IN: in std_logic_vector(7 downto 0);
+    nVID_RD: out std_logic;
+    nWAIT: out std_logic;
+    BORDER_IN: in std_logic_vector(2 downto 0);
+    R: out std_logic_vector(7 downto 0);
+    G: out std_logic_vector(7 downto 0);
+    B: out std_logic_vector(7 downto 0);
+    nVSYNC: out std_logic;
+    nHSYNC: out std_logic;
+    nCSYNC: out std_logic;
+    nHCSYNC: out std_logic;
+    IS_BORDER: out std_logic;
+    IS_VALID: out std_logic;
+    PIXCLK: out std_logic;
+    FLASHCLK: out std_logic;
+    nIRQ: out std_logic
 );
 end component;
 
 component keyboard is
 port (
-	CLK: in std_logic;
-	nRESET: in std_logic;
-	PS2_CLK: inout std_logic;
-	PS2_DATA: inout std_logic;
-	A: in std_logic_vector(15 downto 0);
-	KEYB: out std_logic_vector(4 downto 0)
-	);
+    CLK: in std_logic;
+    nRESET: in std_logic;
+    PS2_CLK: inout std_logic;
+    PS2_DATA: inout std_logic;
+    A: in std_logic_vector(15 downto 0);
+    KEYB: out std_logic_vector(4 downto 0)
+    );
 end component;
 
 component i2s_intf is
@@ -251,117 +230,117 @@ port (
     PCM_INR: out std_logic_vector(word_length - 1 downto 0);
     PCM_OUTL: in std_logic_vector(word_length - 1 downto 0);
     PCM_OUTR: in std_logic_vector(word_length - 1 downto 0);
-	
-	-- Codec interface (right justified mode)
-	-- MCLK is generated at half of the CLK input
-	I2S_MCLK	:	out	std_logic;
-	-- LRCLK is equal to the sample rate and is synchronous to
-	-- MCLK.  It must be related to MCLK by the oversampling ratio
-	-- given in the codec datasheet.
-	I2S_LRCLK	:	out	std_logic;
-	
-	-- Data is shifted out on the falling edge of BCLK, sampled
-	-- on the rising edge.  The bit rate is determined such that
-	-- it is fast enough to fit preamble + word_length bits into
-	-- each LRCLK half cycle.  The last cycle of each word may be 
-	-- stretched to fit to LRCLK.  This is OK at least for the 
-	-- WM8731 codec.
-	-- The first falling edge of each timeslot is always synchronised
-	-- with the LRCLK edge.
-	I2S_BCLK	:	out	std_logic;
-	-- Output bitstream
-	I2S_DOUT	:	out	std_logic;
-	-- Input bitstream
-	I2S_DIN		:	in	std_logic
-	);
+
+    -- Codec interface (right justified mode)
+    -- MCLK is generated at half of the CLK input
+    I2S_MCLK: out std_logic;
+    -- LRCLK is equal to the sample rate and is synchronous to
+    -- MCLK.  It must be related to MCLK by the oversampling ratio
+    -- given in the codec datasheet.
+    I2S_LRCLK: out std_logic;
+
+    -- Data is shifted out on the falling edge of BCLK, sampled
+    -- on the rising edge.  The bit rate is determined such that
+    -- it is fast enough to fit preamble + word_length bits into
+    -- each LRCLK half cycle.  The last cycle of each word may be 
+    -- stretched to fit to LRCLK.  This is OK at least for the 
+    -- WM8731 codec.
+    -- The first falling edge of each timeslot is always synchronised
+    -- with the LRCLK edge.
+    I2S_BCLK: out std_logic;
+    -- Output bitstream
+    I2S_DOUT: out std_logic;
+    -- Input bitstream
+    I2S_DIN: in std_logic
+    );
 end component;
 
 component i2c_loader is
 generic (
-	-- Address of slave to be loaded
-	device_address : integer := 16#1a#;
-	-- Number of retries to allow before stopping
-	num_retries : integer := 0;
-	-- Length of clock divider in bits.  Resulting bus frequency is
-	-- CLK/2^(log2_divider + 2)
-	log2_divider : integer := 6
+    -- Address of slave to be loaded
+    device_address: integer := 16#1a#;
+    -- Number of retries to allow before stopping
+    num_retries: integer := 0;
+    -- Length of clock divider in bits.  Resulting bus frequency is
+    -- CLK/2^(log2_divider + 2)
+    log2_divider: integer := 6
 );
 
 port (
-	CLK			:	in	std_logic;
-	nRESET		:	in	std_logic;
-	I2C_SCL		:	inout	std_logic;
-	I2C_SDA		:	inout	std_logic;
-	IS_DONE		:	out std_logic;
-	IS_ERROR	:	out	std_logic
-	);
+    CLK: in std_logic;
+    nRESET: in std_logic;
+    I2C_SCL: inout std_logic;
+    I2C_SDA: inout std_logic;
+    IS_DONE: out std_logic;
+    IS_ERROR: out std_logic
+    );
 end component;
 
 signal pll_reset: std_logic;
 signal pll_locked: std_logic;
-signal clock			:	std_logic;
-signal audio_clock		:	std_logic;
-signal reset_n			:	std_logic;
-signal psg_clken		:	std_logic;
-signal cpu_clken		:	std_logic;
-signal vid_clken		:	std_logic;
-signal ula_enable		:	std_logic; -- all even IO addresses
-signal rom_enable		:	std_logic; -- 0x0000-0x3FFF
-signal ram_enable		:	std_logic; -- 0x4000-0xFFFF
+signal clock: std_logic;
+signal audio_clock: std_logic;
+signal reset_n: std_logic;
+signal psg_clken: std_logic;
+signal cpu_clken: std_logic;
+signal vid_clken: std_logic;
+signal ula_enable: std_logic; -- all even IO addresses
+signal rom_enable: std_logic; -- 0x0000-0x3FFF
+signal ram_enable: std_logic; -- 0x4000-0xFFFF
 signal page_enable: std_logic; -- all odd IO addresses with A15 and A1 clear
-signal psg_enable		:	std_logic; -- all odd IO addresses with A15 set and A1 clear
-signal page_reg_disable	:	std_logic := '1'; -- bit 5
-signal page_rom_sel		:	std_logic := '0'; -- bit 4
-signal page_shadow_scr	:	std_logic := '0'; -- bit 3
-signal page_ram_sel		:	std_logic_vector(2 downto 0) := "000"; -- bits 2:0
-signal ram_page			:	std_logic_vector(2 downto 0);
-signal sram_di			:	std_logic_vector(7 downto 0);
-signal cpu_wait_n	:	std_logic;
-signal cpu_irq_n	:	std_logic;
-signal cpu_nmi_n	:	std_logic;
-signal cpu_busreq_n	:	std_logic;
-signal cpu_m1_n		:	std_logic;
-signal cpu_mreq_n	:	std_logic;
-signal cpu_ioreq_n	:	std_logic;
-signal cpu_rd_n		:	std_logic;
-signal cpu_wr_n		:	std_logic;
-signal cpu_rfsh_n	:	std_logic;
-signal cpu_halt_n	:	std_logic;
-signal cpu_busack_n	:	std_logic;
-signal cpu_a		:	std_logic_vector(15 downto 0);
-signal cpu_di		:	std_logic_vector(7 downto 0);
-signal cpu_do		:	std_logic_vector(7 downto 0);
-signal ula_do		:	std_logic_vector(7 downto 0);
-signal ula_border	:	std_logic_vector(2 downto 0);
-signal ula_ear_out	:	std_logic;
-signal ula_mic_out	:	std_logic;
-signal ula_ear_in	:	std_logic;
-signal vid_a		:	std_logic_vector(12 downto 0);
-signal vid_di		:	std_logic_vector(7 downto 0);
-signal vid_rd_n		:	std_logic;
-signal vid_wait_n	:	std_logic;
-signal vid_r_out	:	std_logic_vector(7 downto 0);
-signal vid_g_out	:	std_logic_vector(7 downto 0);
-signal vid_b_out	:	std_logic_vector(7 downto 0);
-signal vid_vsync_n	:	std_logic;
-signal vid_hsync_n	:	std_logic;
-signal vid_csync_n	:	std_logic;
-signal vid_hcsync_n	:	std_logic;
-signal vid_is_border	:	std_logic;
-signal vid_is_valid	:	std_logic;
-signal vid_pixclk	:	std_logic;
-signal vid_flashclk	:	std_logic;
-signal vid_irq_n	:	std_logic;
-signal keyb			:	std_logic_vector(4 downto 0);
-signal psg_do		:	std_logic_vector(7 downto 0) := "11111111";
-signal psg_bdir		:	std_logic;
-signal psg_bc1		:	std_logic;
-signal psg_aout		:	std_logic_vector(7 downto 0) := "00000000";
-signal pcm_lrclk	:	std_logic;
-signal pcm_outl		:	std_logic_vector(15 downto 0);
-signal pcm_outr		:	std_logic_vector(15 downto 0);
-signal pcm_inl		:	std_logic_vector(15 downto 0);
-signal pcm_inr		:	std_logic_vector(15 downto 0);
+signal psg_enable: std_logic; -- all odd IO addresses with A15 set and A1 clear
+signal page_reg_disable: std_logic := '1'; -- bit 5
+signal page_rom_sel: std_logic := '0'; -- bit 4
+signal page_shadow_scr: std_logic := '0'; -- bit 3
+signal page_ram_sel: std_logic_vector(2 downto 0) := "000"; -- bits 2:0
+signal ram_page: std_logic_vector(2 downto 0);
+signal sram_di: std_logic_vector(7 downto 0);
+signal cpu_wait_n: std_logic;
+signal cpu_irq_n: std_logic;
+signal cpu_nmi_n: std_logic;
+signal cpu_busreq_n: std_logic;
+signal cpu_m1_n: std_logic;
+signal cpu_mreq_n: std_logic;
+signal cpu_ioreq_n: std_logic;
+signal cpu_rd_n: std_logic;
+signal cpu_wr_n: std_logic;
+signal cpu_rfsh_n: std_logic;
+signal cpu_halt_n: std_logic;
+signal cpu_busack_n: std_logic;
+signal cpu_a: std_logic_vector(15 downto 0);
+signal cpu_di: std_logic_vector(7 downto 0);
+signal cpu_do: std_logic_vector(7 downto 0);
+signal ula_do: std_logic_vector(7 downto 0);
+signal ula_border: std_logic_vector(2 downto 0);
+signal ula_ear_out: std_logic;
+signal ula_mic_out: std_logic;
+signal ula_ear_in: std_logic;
+signal vid_a: std_logic_vector(12 downto 0);
+signal vid_di: std_logic_vector(7 downto 0);
+signal vid_rd_n: std_logic;
+signal vid_wait_n: std_logic;
+signal vid_r_out: std_logic_vector(7 downto 0);
+signal vid_g_out: std_logic_vector(7 downto 0);
+signal vid_b_out: std_logic_vector(7 downto 0);
+signal vid_vsync_n: std_logic;
+signal vid_hsync_n: std_logic;
+signal vid_csync_n: std_logic;
+signal vid_hcsync_n: std_logic;
+signal vid_is_border: std_logic;
+signal vid_is_valid: std_logic;
+signal vid_pixclk: std_logic;
+signal vid_flashclk: std_logic;
+signal vid_irq_n: std_logic;
+signal keyb: std_logic_vector(4 downto 0);
+signal psg_do: std_logic_vector(7 downto 0) := "11111111";
+signal psg_bdir: std_logic;
+signal psg_bc1: std_logic;
+signal psg_aout: std_logic_vector(7 downto 0) := "00000000";
+signal pcm_lrclk: std_logic;
+signal pcm_outl: std_logic_vector(15 downto 0);
+signal pcm_outr: std_logic_vector(15 downto 0);
+signal pcm_inl: std_logic_vector(15 downto 0);
+signal pcm_inr: std_logic_vector(15 downto 0);
 
 begin
     -- 28 MHz master clock
@@ -372,8 +351,7 @@ begin
         audio_clock,
         pll_locked
         );
-		
-    -- Clock enable logic
+
     clken: clocks port map (
         clock,
         reset_n,
@@ -381,8 +359,7 @@ begin
         cpu_clken,
         vid_clken
         );
-		
-    -- CPU
+
     cpu: T80se port map (
         reset_n, clock, cpu_clken, 
         cpu_wait_n,
@@ -400,14 +377,11 @@ begin
     cpu_wait_n <= '1';
     cpu_nmi_n <= '1';
     cpu_busreq_n <= '1';
-	
+
     kb: keyboard port map (
         clock, reset_n,
         PS2_CLK, PS2_DAT,
         cpu_a, keyb);
-
-    GPIO(7) <= PS2_CLK;
-    GPIO(9) <= PS2_DAT;
 
     ula: ula_port port map (
         clock, reset_n,
@@ -417,7 +391,7 @@ begin
         ula_ear_out, ula_mic_out,
         keyb,
         ula_ear_in);
-		
+
     vid: video port map (
         clock, vid_clken, reset_n,
         vid_a, vid_di, vid_rd_n, vid_wait_n,
@@ -428,16 +402,13 @@ begin
         vid_is_border, vid_is_valid,
         vid_pixclk, vid_flashclk,
         vid_irq_n);
-		
+
     i2s: i2s_intf port map (
         audio_clock, reset_n,
         pcm_inl, pcm_inr,
         pcm_outl, pcm_outr,
         AUD_XCK, pcm_lrclk,
         AUD_BCLK, AUD_DACDAT, AUD_ADCDAT);
-
-    AUD_DACLRCK <= pcm_lrclk;
-    AUD_ADCLRCK <= pcm_lrclk;
 
     i2c: i2c_loader 
         generic map (
@@ -474,13 +445,13 @@ begin
         ula_do when ula_enable = '1' else
         psg_do when psg_enable = '1' else
         (others => '1');
-	
+
     -- ROMs are in external flash starting at 0x20000
     -- (lower addresses contain the BBC ROMs)
     FL_RST_N <= reset_n;
     FL_CE_N <= '0';
     FL_OE_N <= '0';
-    FL_WE_N <= '1';		
+    FL_WE_N <= '1';
     FL_ADDR <= '0' & ROM_OFFSET & cpu_a(13 downto 0);
     SRAM_CE_N <= '0';
     SRAM_OE_N <= '0';
@@ -532,9 +503,6 @@ begin
         end if;
     end process;
 
-    pcm_outl <= ula_ear_out & psg_aout & ula_mic_out & "000000";
-    pcm_outr <= ula_ear_out & psg_aout & ula_mic_out & "000000";
-
     -- Hysteresis for EAR input (should help reliability)
     process(clock)
     variable in_val : integer;
@@ -550,7 +518,6 @@ begin
         end if;
     end process;
 
-    -- Connect ULA to video output
     VGA_R <= vid_r_out;
     VGA_G <= vid_g_out;
     VGA_B <= vid_b_out;
@@ -558,6 +525,13 @@ begin
     VGA_VS <= vid_vsync_n;
     VGA_BLANK_N <= vid_is_valid;
     VGA_CLK <= vid_pixclk;
+    GPIO(1) <= ula_ear_out;
+    GPIO(7) <= ula_ear_out;
+    GPIO(9) <= ula_ear_out;
+    AUD_DACLRCK <= pcm_lrclk;
+    AUD_ADCLRCK <= pcm_lrclk;
+    --pcm_outl <= ula_ear_out & psg_aout & ula_mic_out & "000000";
+    --pcm_outr <= ula_ear_out & psg_aout & ula_mic_out & "000000";
 end architecture;
 
 
