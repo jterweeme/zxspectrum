@@ -124,7 +124,7 @@ port (
     nRESET: in std_logic;
 
     -- 1.75 MHz clock enable for sound
-    CLKEN_PSG: out std_logic;
+    --CLKEN_PSG: out std_logic;
     -- 3.5 MHz clock enable (1 in 8)
     CLKEN_CPU: out std_logic;
     -- 14 MHz clock enable (out of phase with CPU)
@@ -281,14 +281,12 @@ signal pll_locked: std_logic;
 signal clock: std_logic;
 signal audio_clock: std_logic;
 signal reset_n: std_logic;
-signal psg_clken: std_logic;
 signal cpu_clken: std_logic;
 signal vid_clken: std_logic;
 signal ula_enable: std_logic; -- all even IO addresses
 signal rom_enable: std_logic; -- 0x0000-0x3FFF
 signal ram_enable: std_logic; -- 0x4000-0xFFFF
 signal page_enable: std_logic; -- all odd IO addresses with A15 and A1 clear
-signal psg_enable: std_logic; -- all odd IO addresses with A15 set and A1 clear
 signal page_reg_disable: std_logic := '1'; -- bit 5
 signal page_rom_sel: std_logic := '0'; -- bit 4
 signal page_shadow_scr: std_logic := '0'; -- bit 3
@@ -332,10 +330,6 @@ signal vid_pixclk: std_logic;
 signal vid_flashclk: std_logic;
 signal vid_irq_n: std_logic;
 signal keyb: std_logic_vector(4 downto 0);
-signal psg_do: std_logic_vector(7 downto 0) := "11111111";
-signal psg_bdir: std_logic;
-signal psg_bc1: std_logic;
-signal psg_aout: std_logic_vector(7 downto 0) := "00000000";
 signal pcm_lrclk: std_logic;
 signal pcm_outl: std_logic_vector(15 downto 0);
 signal pcm_outr: std_logic_vector(15 downto 0);
@@ -355,7 +349,7 @@ begin
     clken: clocks port map (
         clock,
         reset_n,
-        psg_clken,
+        --psg_clken,
         cpu_clken,
         vid_clken
         );
@@ -426,7 +420,6 @@ begin
     pll_reset <= not SW(9);
     reset_n <= not (pll_reset or not pll_locked);
     ula_enable <= (not cpu_ioreq_n) and not cpu_a(0); -- all even IO addresses
-    psg_enable <= (not cpu_ioreq_n) and cpu_a(0) and cpu_a(15) and not cpu_a(1);
     page_enable <= (not cpu_ioreq_n) and cpu_a(0) and not (cpu_a(15) or cpu_a(1));
 
     -- ROM is enabled between 0x0000 and 0x3fff except in +3 special mode
@@ -443,7 +436,6 @@ begin
         sram_di when ram_enable = '1' else
         FL_DQ when rom_enable = '1' else
         ula_do when ula_enable = '1' else
-        psg_do when psg_enable = '1' else
         (others => '1');
 
     -- ROMs are in external flash starting at 0x20000
@@ -530,8 +522,6 @@ begin
     GPIO(9) <= ula_ear_out;
     AUD_DACLRCK <= pcm_lrclk;
     AUD_ADCLRCK <= pcm_lrclk;
-    --pcm_outl <= ula_ear_out & psg_aout & ula_mic_out & "000000";
-    --pcm_outr <= ula_ear_out & psg_aout & ula_mic_out & "000000";
 end architecture;
 
 

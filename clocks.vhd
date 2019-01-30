@@ -47,7 +47,7 @@ port (
 	nRESET			:	in std_logic;
 	
 	-- 1.75 MHz clock enable for sound
-	CLKEN_PSG		:	out	std_logic;
+	--CLKEN_PSG		:	out	std_logic;
 	-- 3.5 MHz clock enable (1 in 8)
 	CLKEN_CPU		:	out std_logic;
 	-- 14 MHz clock enable (out of phase with CPU)
@@ -68,7 +68,7 @@ begin
 	-- XXX1
 	CLKEN_VID <= counter(0);
 	-- 1111
-	CLKEN_PSG <= counter(0) and counter(1) and counter(2) and counter(3);
+	--CLKEN_PSG <= counter(0) and counter(1) and counter(2) and counter(3);
 
 	process(nRESET,CLK)
 	begin
