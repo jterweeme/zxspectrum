@@ -63,23 +63,14 @@ port (
     UART_TXD: out std_logic;
     PS2_CLK, PS2_DAT: inout std_logic;
     I2C_SCLK, I2C_SDAT: inout std_logic;
-    AUD_XCK, AUD_BCLK, AUD_ADCLRCK: out std_logic;
+    AUD_XCK, AUD_BCLK, AUD_ADCLRCK, AUD_DACLRCK, AUD_DACDAT: out std_logic;
     AUD_ADCDAT: in std_logic;
-    AUD_DACLRCK: out std_logic;
-    AUD_DACDAT: out std_logic;
     SRAM_ADDR: out std_logic_vector(19 downto 0);
     SRAM_DQ: inout std_logic_vector(15 downto 0);
-    SRAM_CE_N: out std_logic;
-    SRAM_OE_N: out std_logic;
-    SRAM_WE_N: out std_logic;
-    SRAM_UB_N: out std_logic;
-    SRAM_LB_N: out std_logic;
+    SRAM_CE_N, SRAM_OE_N, SRAM_WE_N, SRAM_UB_N, SRAM_LB_N: out std_logic;
     FL_ADDR: out std_logic_vector(22 downto 0);
     FL_DQ: inout std_logic_vector(7 downto 0);
-    FL_RST_N: out std_logic;
-    FL_OE_N: out std_logic;
-    FL_WE_N: out std_logic;
-    FL_CE_N: out std_logic;
+    FL_RST_N, FL_OE_N, FL_WE_N, FL_CE_N: out std_logic;
     GPIO: out std_logic_vector(34 downto 0);
 	 EAR_IN: in std_logic
     );
@@ -120,14 +111,9 @@ component T80se is
         INT_n: in std_logic;
         NMI_n: in std_logic;
         BUSRQ_n: in std_logic;
-        M1_n: out std_logic;
         MREQ_n: out std_logic;
         IORQ_n: out std_logic;
-        RD_n: out std_logic;
         WR_n: out std_logic;
-        RFSH_n: out std_logic;
-        HALT_n: out std_logic;
-        BUSAK_n: out std_logic;
         A: out std_logic_vector(15 downto 0);
         DI: in std_logic_vector(7 downto 0);
         DO: out std_logic_vector(7 downto 0)
@@ -156,8 +142,6 @@ port(
     nRESET: in std_logic;
     VID_A: out std_logic_vector(12 downto 0);
     VID_D_IN: in std_logic_vector(7 downto 0);
-    nVID_RD: out std_logic;
-    nWAIT: out std_logic;
     BORDER_IN: in std_logic_vector(2 downto 0);
     R, G, B: out std_logic_vector(7 downto 0);
     nVSYNC, nHSYNC, nCSYNC, nHCSYNC: out std_logic;
@@ -213,45 +197,21 @@ signal pll_reset, pll_locked: std_logic;
 signal clk28, clk3_5, clk14: std_logic;
 signal audio_clock: std_logic;
 signal reset_n: std_logic;
-signal ula_enable: std_logic; -- all even IO addresses
-signal rom_enable: std_logic; -- 0x0000-0x3FFF
-signal ram_enable: std_logic; -- 0x4000-0xFFFF
-signal page_enable: std_logic; -- all odd IO addresses with A15 and A1 clear
-signal page_reg_disable: std_logic := '1'; -- bit 5
+signal ula_enable, rom_enable, ram_enable: std_logic;
 signal page_rom_sel: std_logic := '0'; -- bit 4
-signal page_shadow_scr: std_logic := '0'; -- bit 3
-signal page_ram_sel: std_logic_vector(2 downto 0) := "000"; -- bits 2:0
 signal ram_page: std_logic_vector(2 downto 0);
 signal sram_di: std_logic_vector(7 downto 0);
-signal cpu_wait_n: std_logic;
-signal cpu_irq_n: std_logic;
-signal cpu_nmi_n: std_logic;
-signal cpu_busreq_n: std_logic;
-signal cpu_m1_n: std_logic;
-signal cpu_mreq_n: std_logic;
-signal cpu_ioreq_n: std_logic;
-signal cpu_rd_n: std_logic;
+signal cpu_wait_n, cpu_irq_n, cpu_nmi_n, cpu_busreq_n, cpu_mreq_n, cpu_ioreq_n: std_logic;
 signal cpu_wr_n: std_logic;
-signal cpu_rfsh_n: std_logic;
-signal cpu_halt_n: std_logic;
-signal cpu_busack_n: std_logic;
 signal cpu_a: std_logic_vector(15 downto 0);
 signal cpu_di, cpu_do, ula_do: std_logic_vector(7 downto 0);
 signal ula_border: std_logic_vector(2 downto 0);
-signal ula_ear_out: std_logic;
-signal ula_mic_out: std_logic;
-signal ula_ear_in: std_logic;
+signal ula_ear_out, ula_mic_out, ula_ear_in: std_logic;
 signal vid_a: std_logic_vector(12 downto 0);
 signal vid_di: std_logic_vector(7 downto 0);
-signal vid_rd_n: std_logic;
-signal vid_wait_n: std_logic;
 signal vid_r_out, vid_g_out, vid_b_out: std_logic_vector(7 downto 0);
 signal vid_vsync_n, vid_hsync_n, vid_csync_n, vid_hcsync_n: std_logic;
-signal vid_is_border: std_logic;
-signal vid_is_valid: std_logic;
-signal vid_pixclk: std_logic;
-signal vid_flashclk: std_logic;
-signal vid_irq_n: std_logic;
+signal vid_is_border, vid_is_valid, vid_pixclk, vid_flashclk, vid_irq_n: std_logic;
 signal keyb: std_logic_vector(4 downto 0);
 signal pcm_lrclk: std_logic;
 signal pcm_outl, pcm_outr, pcm_inl, pcm_inr: std_logic_vector(15 downto 0);
@@ -262,10 +222,9 @@ begin
     cpu: T80se port map (
         reset_n, clk28, clk3_5, 
         cpu_wait_n, cpu_irq_n, cpu_nmi_n,
-        cpu_busreq_n, cpu_m1_n,
+        cpu_busreq_n,
         cpu_mreq_n, cpu_ioreq_n,
-        cpu_rd_n, cpu_wr_n,
-        cpu_rfsh_n, cpu_halt_n, cpu_busack_n,
+		  cpu_wr_n,
         cpu_a, cpu_di, cpu_do
         );
     
@@ -274,10 +233,7 @@ begin
     cpu_nmi_n <= '1';
     cpu_busreq_n <= '1';
 
-    kb: keyboard port map (
-        clk28, reset_n,
-        PS2_CLK, PS2_DAT,
-        cpu_a, keyb);
+    kb: keyboard port map (clk28, reset_n, PS2_CLK, PS2_DAT, cpu_a, keyb);
 
     ula: ula_port port map (
         clk28, reset_n, cpu_do, ula_do,
@@ -287,7 +243,7 @@ begin
 
     vid: video port map (
         clk28, clk14, reset_n,
-        vid_a, vid_di, vid_rd_n, vid_wait_n,
+        vid_a, vid_di,
         ula_border,
         vid_r_out, vid_g_out, vid_b_out,
         vid_vsync_n, vid_hsync_n,
@@ -314,20 +270,14 @@ begin
             LEDR(0) -- IS_ERROR
         );
 
-    -- Asynchronous reset
-    -- PLL is reset by external reset switch
     pll_reset <= not SW(9);
     reset_n <= not (pll_reset or not pll_locked);
     ula_enable <= (not cpu_ioreq_n) and not cpu_a(0); -- all even IO addresses
-    page_enable <= (not cpu_ioreq_n) and cpu_a(0) and not (cpu_a(15) or cpu_a(1));
-
-    -- ROM is enabled between 0x0000 and 0x3fff except in +3 special mode
     rom_enable <= (not cpu_mreq_n) and not (cpu_a(15) or cpu_a(14));
-    -- RAM is enabled for any memory request when ROM isn't enabled
     ram_enable <= not (cpu_mreq_n or rom_enable);
     -- 128K has pageable RAM at 0xc000
     ram_page <=
-            page_ram_sel when cpu_a(15 downto 14) = "11" else -- Selectable bank at 0xc000
+            "000" when cpu_a(15 downto 14) = "11" else -- Selectable bank at 0xc000
             cpu_a(14) & cpu_a(15 downto 14); -- A=bank: 00=XXX, 01=101, 10=010, 11=XXX
 
     -- CPU data bus mux
@@ -349,11 +299,10 @@ begin
 
     -- Synchronous outputs to SRAM
     process (clk28, reset_n)
-    variable int_ram_write: std_logic;
     variable sram_write: std_logic;
     begin
-        int_ram_write := ram_enable and not cpu_wr_n;
-        sram_write := int_ram_write;
+        --int_ram_write := ram_enable and not cpu_wr_n;
+        sram_write := ram_enable and not cpu_wr_n;
 
         if reset_n = '0' then
             SRAM_WE_N <= '1';
@@ -361,7 +310,6 @@ begin
             SRAM_LB_N <= '1';
             SRAM_DQ <= (others => 'Z');
         elsif rising_edge(clk28) then
-            -- Default to inputs
             SRAM_DQ <= (others => 'Z');
 
             -- Register SRAM signals to outputs (clock must be at least 2x CPU clock)
@@ -415,10 +363,15 @@ begin
     VGA_BLANK_N <= vid_is_valid;
     VGA_CLK <= vid_pixclk;
     GPIO(1) <= ula_ear_out;
-    GPIO(7) <= ula_ear_out;
-    GPIO(9) <= ula_ear_out;
+    --GPIO <= "000000000000000000000000000000000" & ula_ear_out & ula_ear_out;
+    HEX0 <= "0000000";
+    HEX1 <= "0000000";
+    HEX2 <= "0000000";
+    HEX3 <= "0000000";
+    LEDG <= "00000000";
     AUD_DACLRCK <= pcm_lrclk;
     AUD_ADCLRCK <= pcm_lrclk;
+    UART_TXD <= '1';
 end architecture;
 
 

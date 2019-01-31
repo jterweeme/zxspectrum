@@ -44,40 +44,20 @@ use ieee.std_logic_unsigned.all;
 entity video is
 port(
     CLK: in std_logic;
-    -- Video domain clock enable (14 MHz)
     CLKEN: in std_logic;
-    -- Master reset
     nRESET: in std_logic;
-
-    -- Mode
-    --VGA: in std_logic;
-
-	-- Memory interface
-	VID_A		:	out	std_logic_vector(12 downto 0);
-	VID_D_IN	:	in	std_logic_vector(7 downto 0);
-	nVID_RD	:	out	std_logic;
-	nWAIT		:	out	std_logic;
-	
-	-- IO interface
-	BORDER_IN	:	in	std_logic_vector(2 downto 0);
-
-	-- Video outputs
-	R			:	out	std_logic_vector(7 downto 0);
-	G			:	out	std_logic_vector(7 downto 0);
-	B			:	out	std_logic_vector(7 downto 0);
-	nVSYNC		:	out std_logic;
-	nHSYNC		:	out std_logic;
-	nCSYNC		:	out	std_logic;
-	nHCSYNC		:	out std_logic;
-	IS_BORDER	: 	out std_logic;
-	IS_VALID	:	out std_logic;
-	
-	-- Clock outputs, might be useful
-	PIXCLK		:	out std_logic;
-	FLASHCLK	: 	out std_logic;
-	
-	-- Interrupt to CPU (asserted for 32 T-states, 64 ticks)
-	nIRQ		:	out	std_logic
+    VID_A: out std_logic_vector(12 downto 0);
+    VID_D_IN: in std_logic_vector(7 downto 0);
+    nVID_RD: out std_logic;
+    nWAIT: out std_logic;
+    BORDER_IN: in std_logic_vector(2 downto 0);
+    R, G, B: out std_logic_vector(7 downto 0);
+    nVSYNC, nHSYNC, nCSYNC, nHCSYNC: out std_logic;
+    IS_BORDER: out std_logic;
+    IS_VALID: out std_logic;
+    PIXCLK: out std_logic;
+    FLASHCLK: out std_logic;
+    nIRQ: out std_logic
 );
 end video;
 
@@ -361,4 +341,6 @@ begin
         end if;
     end process;
 end video_arch;
+
+
 
