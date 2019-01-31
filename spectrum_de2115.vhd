@@ -54,8 +54,9 @@ generic (
 port (
     clk50: in std_logic;
     SW: in std_logic_vector(9 downto 0);
+	 KEY: in std_logic_vector(3 downto 0);
     HEX0, HEX1, HEX2, HEX3: out std_logic_vector(6 downto 0);
-    LEDR: out std_logic_vector(9 downto 0);
+    LEDR: out std_logic_vector(17 downto 0);
     LEDG: out std_logic_vector(7 downto 0);
     VGA_R, VGA_G, VGA_B: out std_logic_vector(7 downto 0);
     VGA_HS, VGA_VS: out std_logic;
@@ -188,8 +189,7 @@ generic (
 
 port (
     CLK, nRESET: in std_logic;
-    I2C_SCL, I2C_SDA: inout std_logic;
-    IS_DONE, IS_ERROR: out std_logic
+    I2C_SCL, I2C_SDA: inout std_logic
     );
 end component;
 
@@ -222,10 +222,8 @@ begin
     cpu: T80se port map (
         reset_n, clk28, clk3_5, 
         cpu_wait_n, cpu_irq_n, cpu_nmi_n,
-        cpu_busreq_n,
-        cpu_mreq_n, cpu_ioreq_n,
-		  cpu_wr_n,
-        cpu_a, cpu_di, cpu_do
+        cpu_busreq_n, cpu_mreq_n, cpu_ioreq_n,
+		  cpu_wr_n, cpu_a, cpu_di, cpu_do
         );
     
     cpu_irq_n <= vid_irq_n; -- VSYNC interrupt routed to CPU
@@ -243,8 +241,7 @@ begin
 
     vid: video port map (
         clk28, clk14, reset_n,
-        vid_a, vid_di,
-        ula_border,
+        vid_a, vid_di, ula_border,
         vid_r_out, vid_g_out, vid_b_out,
         vid_vsync_n, vid_hsync_n,
         vid_csync_n, vid_hcsync_n,
@@ -260,17 +257,10 @@ begin
         AUD_BCLK, AUD_DACDAT, AUD_ADCDAT);
 
     i2c: i2c_loader 
-        generic map (
-            log2_divider => 7
-        )
-        port map (
-            clk28, reset_n,
-            I2C_SCLK, I2C_SDAT,
-            LEDR(1), -- IS_DONE
-            LEDR(0) -- IS_ERROR
-        );
+        generic map (log2_divider => 7)
+        port map (clk28, reset_n, I2C_SCLK, I2C_SDAT);
 
-    pll_reset <= not SW(9);
+    pll_reset <= not KEY(0);
     reset_n <= not (pll_reset or not pll_locked);
     ula_enable <= (not cpu_ioreq_n) and not cpu_a(0); -- all even IO addresses
     rom_enable <= (not cpu_mreq_n) and not (cpu_a(15) or cpu_a(14));
@@ -301,7 +291,6 @@ begin
     process (clk28, reset_n)
     variable sram_write: std_logic;
     begin
-        --int_ram_write := ram_enable and not cpu_wr_n;
         sram_write := ram_enable and not cpu_wr_n;
 
         if reset_n = '0' then
@@ -368,7 +357,8 @@ begin
     HEX1 <= "0000000";
     HEX2 <= "0000000";
     HEX3 <= "0000000";
-    LEDG <= "00000000";
+    LEDG <= "11000000";
+	 LEDR <= "000000000011111111";
     AUD_DACLRCK <= pcm_lrclk;
     AUD_ADCLRCK <= pcm_lrclk;
     UART_TXD <= '1';

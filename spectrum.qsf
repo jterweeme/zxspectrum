@@ -577,4 +577,28 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 set_global_assignment -name RESERVE_ALL_UNUSED_PINS_WEAK_PULLUP "AS INPUT TRI-STATED WITH WEAK PULL-UP"
 set_location_assignment PIN_AG26 -to EAR_IN
 set_location_assignment PIN_Y2 -to clk50
+set_location_assignment PIN_H15 -to LEDR[17]
+set_location_assignment PIN_G16 -to LEDR[16]
+set_location_assignment PIN_G15 -to LEDR[15]
+set_location_assignment PIN_F15 -to LEDR[14]
+set_location_assignment PIN_J15 -to LEDR[10]
+set_location_assignment PIN_H16 -to LEDR[11]
+set_location_assignment PIN_J16 -to LEDR[12]
+set_location_assignment PIN_H17 -to LEDR[13]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LEDR[10]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LEDR[11]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LEDR[13]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LEDR[16]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LEDR[17]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LEDR[15]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LEDR[14]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LEDR[12]
+set_location_assignment PIN_M23 -to KEY[0]
+set_location_assignment PIN_M21 -to KEY[1]
+set_location_assignment PIN_N21 -to KEY[2]
+set_location_assignment PIN_R24 -to KEY[3]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to KEY[3]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to KEY[2]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to KEY[1]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to KEY[0]
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

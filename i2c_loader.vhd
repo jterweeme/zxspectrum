@@ -35,12 +35,12 @@
 -- POSSIBILITY OF SUCH DAMAGE.
 --
 
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.STD_LOGIC_ARITH.ALL;
-use IEEE.STD_LOGIC_UNSIGNED.ALL;
-use IEEE.STD_LOGIC_MISC.ALL; -- for AND_REDUCE
-use IEEE.NUMERIC_STD.ALL;
+library ieee;
+use ieee.STD_LOGIC_1164.ALL;
+use ieee.STD_LOGIC_ARITH.ALL;
+use ieee.STD_LOGIC_UNSIGNED.ALL;
+use ieee.STD_LOGIC_MISC.ALL; -- for AND_REDUCE
+use ieee.NUMERIC_STD.ALL;
 
 entity i2c_loader is
 generic (
@@ -54,14 +54,9 @@ generic (
 );
 
 port (
-	CLK			:	in	std_logic;
-	nRESET		:	in	std_logic;
-	
-	I2C_SCL		:	inout	std_logic;
-	I2C_SDA		:	inout	std_logic;
-	
-	IS_DONE		:	out std_logic;
-	IS_ERROR	:	out	std_logic
+    CLK, nRESET: in std_logic;
+    I2C_SCL, I2C_SDA: inout std_logic
+    --IS_DONE, IS_ERROR: out std_logic;
 	);
 end i2c_loader;
 
@@ -119,8 +114,8 @@ begin
 	I2C_SCL <= '0' when scl_out = '0' else 'Z';
 	I2C_SDA <= '0' when sda_out = '0' else 'Z';
 	-- Status outputs are driven both ways
-	IS_DONE <= '1' when state = Done else '0';
-	IS_ERROR <= nak;
+	--IS_DONE <= '1' when state = Done else '0';
+	--IS_ERROR <= nak;
 	
 	-- Generate clock enable for desired bus speed
 	clken <= AND_REDUCE(divider);
