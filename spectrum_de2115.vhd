@@ -163,36 +163,6 @@ port (
     );
 end component;
 
---component i2s_intf is
---generic(
---    mclk_rate : positive := 12000000;
---    sample_rate : positive := 8000;
---    preamble : positive := 1; -- I2S
---    word_length : positive := 16
---    );
---
---port (
---    CLK, nRESET: in std_logic;
---    PCM_INL, PCM_INR: out std_logic_vector(word_length - 1 downto 0);
---    PCM_OUTL, PCM_OUTR: in std_logic_vector(word_length - 1 downto 0);
---    I2S_MCLK, I2S_LRCLK, I2S_BCLK, I2S_DOUT: out std_logic;
---    I2S_DIN: in std_logic
---    );
---end component;
---
---component i2c_loader is
---generic (
---    device_address: integer := 16#1a#;
---    num_retries: integer := 0;
---    log2_divider: integer := 6
---);
---
---port (
---    CLK, nRESET: in std_logic;
---    I2C_SCL, I2C_SDA: inout std_logic
---    );
---end component;
-
 signal pll_reset, pll_locked: std_logic;
 signal clk28, clk3_5, clk14: std_logic;
 signal audio_clock: std_logic;
@@ -213,12 +183,10 @@ signal vid_r_out, vid_g_out, vid_b_out: std_logic_vector(7 downto 0);
 signal vid_vsync_n, vid_hsync_n, vid_csync_n, vid_hcsync_n: std_logic;
 signal vid_is_border, vid_is_valid, vid_pixclk, vid_flashclk, vid_irq_n: std_logic;
 signal keyb: std_logic_vector(4 downto 0);
-signal pcm_lrclk: std_logic;
-signal pcm_outl, pcm_outr, pcm_inl, pcm_inr: std_logic_vector(15 downto 0);
 begin
     pll: pll_main port map (pll_reset, clk50, clk28, audio_clock, pll_locked);
     clken: clocks port map (clk28, reset_n, clk3_5, clk14);
-
+	 
     cpu: T80se port map (
         reset_n, clk28, clk3_5, 
         cpu_wait_n, cpu_irq_n, cpu_nmi_n,
@@ -233,12 +201,29 @@ begin
 
     kb: keyboard port map (clk28, reset_n, PS2_CLK, PS2_DAT, cpu_a, keyb);
 
-    ula: ula_port port map (
-        clk28, reset_n, cpu_do, ula_do,
-        ula_enable, cpu_wr_n, ula_border,
-        ula_ear_out, ula_mic_out,
-        keyb, EAR_IN);
+--    ula: ula_port port map (
+--        clk28, reset_n, cpu_do, ula_do,
+--        ula_enable, cpu_wr_n, ula_border,
+--        ula_ear_out, ula_mic_out,
+--        keyb, EAR_IN);
 
+    process (clk28, reset_n)
+    begin
+        if reset_n = '0' then
+			  ula_ear_out <= '0';
+			  ula_mic_out <= '0';
+			  ula_border <= (others => '0');
+			  ula_do <= (others => '0');
+        elsif rising_edge(clk28) then
+			  ula_do <= '0' & EAR_IN & '0' & keyb;
+			  if ula_enable = '1' and cpu_wr_n = '0' then
+				  ula_ear_out <= cpu_do(4);
+				  ula_mic_out <= cpu_do(3);
+				  ula_border <= cpu_do(2 downto 0);
+			  end if;
+        end if;
+    end process;		  
+		  
     vid: video port map (
         clk28, clk14, reset_n,
         vid_a, vid_di, ula_border,
@@ -248,17 +233,6 @@ begin
         vid_is_border, vid_is_valid,
         vid_pixclk, vid_flashclk,
         vid_irq_n);
-
---    i2s: i2s_intf port map (
---        audio_clock, reset_n,
---        pcm_inl, pcm_inr,
---        pcm_outl, pcm_outr,
---        AUD_XCK, pcm_lrclk,
---        AUD_BCLK, AUD_DACDAT, AUD_ADCDAT);
---
---    i2c: i2c_loader 
---        generic map (log2_divider => 7)
---        port map (clk28, reset_n, I2C_SCLK, I2C_SDAT);
 
     pll_reset <= not KEY(0);
     reset_n <= not (pll_reset or not pll_locked);
@@ -329,21 +303,6 @@ begin
         end if;
     end process;
 
-    -- Hysteresis for EAR input (should help reliability)
---    process (clk28)
---    variable in_val : integer;
---    begin
---        in_val := to_integer(signed(pcm_inl));
---
---        if rising_edge(clk28) then
---            if in_val < -15 then
---                ula_ear_in <= '0';
---            elsif in_val > 15 then
---                ula_ear_in <= '1';
---            end if;
---        end if;
---    end process;
-
     VGA_R <= vid_r_out;
     VGA_G <= vid_g_out;
     VGA_B <= vid_b_out;
@@ -363,8 +322,8 @@ begin
 --    HEX7 <= "1111001";
     LEDG <= "11000000";
 	 LEDR <= "000000000011111111";
-    AUD_DACLRCK <= pcm_lrclk;
-    AUD_ADCLRCK <= pcm_lrclk;
+    AUD_DACLRCK <= '1';
+    AUD_ADCLRCK <= '1';
     UART_TXD <= '1';
 end architecture;
 
