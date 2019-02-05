@@ -121,21 +121,6 @@ component T80se is
     );
 end component;
 
-component ula_port is
-port (
-    CLK: in std_logic;
-    nRESET: in std_logic;
-    D_IN: in std_logic_vector(7 downto 0);
-    D_OUT: out std_logic_vector(7 downto 0);
-    ENABLE: in std_logic;
-    nWR: in std_logic;
-    BORDER_OUT: out std_logic_vector(2 downto 0);
-    EAR_OUT, MIC_OUT: out std_logic;
-    KEYB_IN: in std_logic_vector(4 downto 0);
-    EAR_IN: in std_logic
-    );
-end component;
-
 component video is
 port(
     CLK: in std_logic;
@@ -201,26 +186,20 @@ begin
 
     kb: keyboard port map (clk28, reset_n, PS2_CLK, PS2_DAT, cpu_a, keyb);
 
---    ula: ula_port port map (
---        clk28, reset_n, cpu_do, ula_do,
---        ula_enable, cpu_wr_n, ula_border,
---        ula_ear_out, ula_mic_out,
---        keyb, EAR_IN);
-
     process (clk28, reset_n)
     begin
         if reset_n = '0' then
-			  ula_ear_out <= '0';
-			  ula_mic_out <= '0';
-			  ula_border <= (others => '0');
-			  ula_do <= (others => '0');
+            ula_ear_out <= '0';
+            ula_mic_out <= '0';
+            ula_border <= (others => '0');
+            ula_do <= (others => '0');
         elsif rising_edge(clk28) then
-			  ula_do <= '0' & EAR_IN & '0' & keyb;
-			  if ula_enable = '1' and cpu_wr_n = '0' then
-				  ula_ear_out <= cpu_do(4);
-				  ula_mic_out <= cpu_do(3);
-				  ula_border <= cpu_do(2 downto 0);
-			  end if;
+            ula_do <= '0' & EAR_IN & '0' & keyb;
+            if ula_enable = '1' and cpu_wr_n = '0' then
+                ula_ear_out <= cpu_do(4);
+                ula_mic_out <= cpu_do(3);
+                ula_border <= cpu_do(2 downto 0);
+            end if;
         end if;
     end process;		  
 		  
