@@ -47,10 +47,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity spectrum_de2115 is
-generic (
-    ROM_OFFSET: std_logic_vector(7 downto 0) := "00000000"
-    );
-
+generic (ROM_OFFSET: std_logic_vector(7 downto 0) := "00000000");
 port (
     clk50: in std_logic;
     SW: in std_logic_vector(9 downto 0);
@@ -61,7 +58,7 @@ port (
     VGA_R, VGA_G, VGA_B: out std_logic_vector(7 downto 0);
     VGA_HS, VGA_VS: out std_logic;
     VGA_BLANK_N, VGA_CLK: out std_logic;
-    UART_TXD: out std_logic;
+    UART_TXD, UART_RTS: out std_logic;
     PS2_CLK, PS2_DAT: inout std_logic;
     I2C_SCLK, I2C_SDAT: inout std_logic;
     AUD_XCK, AUD_BCLK, AUD_ADCLRCK, AUD_DACLRCK, AUD_DACDAT: out std_logic;
@@ -74,6 +71,7 @@ port (
     FL_RST_N, FL_OE_N, FL_WE_N, FL_CE_N: out std_logic;
     GPIO: out std_logic_vector(34 downto 0);
 	 EAR_IN: in std_logic
+	 --EX_IO: in std_logic_vector(6 downto 0)
     );
 end entity;
 
@@ -84,7 +82,6 @@ component pll_main IS
         areset: in std_logic := '0';
         inclk0: in std_logic := '0';
         c0: out std_logic;
-        c1: out std_logic;
         locked: out std_logic 
     );
 end component;
@@ -155,7 +152,7 @@ signal reset_n: std_logic;
 signal ula_enable, rom_enable, ram_enable: std_logic;
 signal page_rom_sel: std_logic := '0'; -- bit 4
 signal ram_page: std_logic_vector(2 downto 0);
-signal sram_di: std_logic_vector(7 downto 0);
+signal sram_di, vid_di: std_logic_vector(7 downto 0);
 signal cpu_wait_n, cpu_irq_n, cpu_nmi_n, cpu_busreq_n, cpu_mreq_n, cpu_ioreq_n: std_logic;
 signal cpu_wr_n: std_logic;
 signal cpu_a: std_logic_vector(15 downto 0);
@@ -163,13 +160,12 @@ signal cpu_di, cpu_do, ula_do: std_logic_vector(7 downto 0);
 signal ula_border: std_logic_vector(2 downto 0);
 signal ula_ear_out, ula_mic_out, ula_ear_in: std_logic;
 signal vid_a: std_logic_vector(12 downto 0);
-signal vid_di: std_logic_vector(7 downto 0);
 signal vid_r_out, vid_g_out, vid_b_out: std_logic_vector(7 downto 0);
 signal vid_vsync_n, vid_hsync_n, vid_csync_n, vid_hcsync_n: std_logic;
 signal vid_is_border, vid_is_valid, vid_pixclk, vid_flashclk, vid_irq_n: std_logic;
 signal keyb: std_logic_vector(4 downto 0);
 begin
-    pll: pll_main port map (pll_reset, clk50, clk28, audio_clock, pll_locked);
+    pll: pll_main port map (pll_reset, clk50, clk28, pll_locked);
     clken: clocks port map (clk28, reset_n, clk3_5, clk14);
 	 
     cpu: T80se port map (
@@ -303,6 +299,10 @@ begin
     AUD_DACLRCK <= '1';
     AUD_ADCLRCK <= '1';
     UART_TXD <= '1';
+	 UART_RTS <= '1';
+	 AUD_XCK <= '1';
+	 AUD_BCLK <= '1';
+	 AUD_DACDAT <= '1';
 end architecture;
 
 
