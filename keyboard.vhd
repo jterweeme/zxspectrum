@@ -44,12 +44,7 @@ entity keyboard is
 port (
 	CLK			:	in	std_logic;
 	nRESET		:	in	std_logic;
-
-	-- PS/2 interface
-	PS2_CLK		:	inout	std_logic;
-	PS2_DATA	:	inout	std_logic;
-	
-	-- CPU address bus (row)
+	PS2_CLK, PS2_DATA: in std_logic;
 	A			:	in	std_logic_vector(15 downto 0);
 	-- Column outputs to ULA
 	KEYB		:	out	std_logic_vector(4 downto 0)

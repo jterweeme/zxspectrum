@@ -52,7 +52,7 @@ port(
     nWAIT: out std_logic;
     BORDER_IN: in std_logic_vector(2 downto 0);
     R, G, B: out std_logic_vector(7 downto 0);
-    nVSYNC, nHSYNC, nCSYNC, nHCSYNC: out std_logic;
+    nVSYNC, nHCSYNC: out std_logic;
     IS_BORDER: out std_logic;
     IS_VALID: out std_logic;
     PIXCLK: out std_logic;
@@ -94,19 +94,11 @@ begin
     -- The first 256 pixels of each line are valid picture
     picture <= hpicture and vpicture;
     blanking <= hblanking or vblanking;
-
-    -- Generate clocks and enables from internal signals
     FLASHCLK <= flashcounter(4);
     IS_VALID <= not blanking;
     IS_BORDER <= not picture;
     PIXCLK <= CLK and CLKEN and nRESET;
-
-    -- Output syncs
     nVSYNC <= not vsync;
-    nHSYNC <= not hsync;
-    nCSYNC <= not (vsync xor hsync);
-    -- Combined HSYNC/CSYNC.  Feeds HSYNC to VGA HSYNC in VGA mode,
-    -- or CSYNC to the same pin in PAL mode
     nHCSYNC <= not hsync;
 	
     -- Determine the pixel colour

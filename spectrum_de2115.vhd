@@ -130,7 +130,7 @@ port(
     VID_D_IN: in std_logic_vector(7 downto 0);
     BORDER_IN: in std_logic_vector(2 downto 0);
     R, G, B: out std_logic_vector(7 downto 0);
-    nVSYNC, nHSYNC, nCSYNC, nHCSYNC: out std_logic;
+    nVSYNC, nHCSYNC: out std_logic;
     IS_BORDER: out std_logic;
     IS_VALID: out std_logic;
     PIXCLK: out std_logic;
@@ -142,7 +142,7 @@ end component;
 component keyboard is
 port (
     CLK, nRESET: in std_logic;
-    PS2_CLK, PS2_DATA: inout std_logic;
+    PS2_CLK, PS2_DATA: in std_logic;
     A: in std_logic_vector(15 downto 0);
     KEYB: out std_logic_vector(4 downto 0)
     );
@@ -207,8 +207,7 @@ begin
         clk28, clk14, reset_n,
         vid_a, vid_di, ula_border,
         vid_r_out, vid_g_out, vid_b_out,
-        vid_vsync_n, vid_hsync_n,
-        vid_csync_n, vid_hcsync_n,
+        vid_vsync_n, vid_hcsync_n,
         vid_is_border, vid_is_valid,
         vid_pixclk, vid_flashclk,
         vid_irq_n);
