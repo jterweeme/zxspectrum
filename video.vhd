@@ -53,10 +53,10 @@ port(
     BORDER_IN: in std_logic_vector(2 downto 0);
     R, G, B: out std_logic_vector(7 downto 0);
     nVSYNC, nHCSYNC: out std_logic;
-    IS_BORDER: out std_logic;
+    --IS_BORDER: out std_logic;
     IS_VALID: out std_logic;
     PIXCLK: out std_logic;
-    FLASHCLK: out std_logic;
+    --FLASHCLK: out std_logic;
     nIRQ: out std_logic
 );
 end video;
@@ -94,9 +94,9 @@ begin
     -- The first 256 pixels of each line are valid picture
     picture <= hpicture and vpicture;
     blanking <= hblanking or vblanking;
-    FLASHCLK <= flashcounter(4);
+    --FLASHCLK <= flashcounter(4);
     IS_VALID <= not blanking;
-    IS_BORDER <= not picture;
+    --IS_BORDER <= not picture;
     PIXCLK <= CLK and CLKEN and nRESET;
     nVSYNC <= not vsync;
     nHCSYNC <= not hsync;

@@ -52,7 +52,7 @@ port (
     clk50: in std_logic;
     SW: in std_logic_vector(9 downto 0);
 	 KEY: in std_logic_vector(3 downto 0);
-    HEX0, HEX1, HEX2, HEX3: out std_logic_vector(6 downto 0);
+    HEX0, HEX1, HEX2, HEX3, HEX4, HEX5, HEX6, HEX7: out std_logic_vector(6 downto 0);
     LEDR: out std_logic_vector(17 downto 0);
     LEDG: out std_logic_vector(7 downto 0);
     VGA_R, VGA_G, VGA_B: out std_logic_vector(7 downto 0);
@@ -69,9 +69,9 @@ port (
     FL_ADDR: out std_logic_vector(22 downto 0);
     FL_DQ: inout std_logic_vector(7 downto 0);
     FL_RST_N, FL_OE_N, FL_WE_N, FL_CE_N: out std_logic;
-    GPIO: out std_logic_vector(34 downto 0);
-	 EAR_IN: in std_logic
-	 --EX_IO: in std_logic_vector(6 downto 0)
+    GPIO: inout std_logic_vector(34 downto 0);
+	 EAR_IN: in std_logic;
+	 EX_IO: inout std_logic_vector(6 downto 0)
     );
 end entity;
 
@@ -128,10 +128,10 @@ port(
     BORDER_IN: in std_logic_vector(2 downto 0);
     R, G, B: out std_logic_vector(7 downto 0);
     nVSYNC, nHCSYNC: out std_logic;
-    IS_BORDER: out std_logic;
+    --IS_BORDER: out std_logic;
     IS_VALID: out std_logic;
     PIXCLK: out std_logic;
-    FLASHCLK: out std_logic;
+    --FLASHCLK: out std_logic;
     nIRQ: out std_logic
 );
 end component;
@@ -147,10 +147,8 @@ end component;
 
 signal pll_reset, pll_locked: std_logic;
 signal clk28, clk3_5, clk14: std_logic;
-signal audio_clock: std_logic;
 signal reset_n: std_logic;
 signal ula_enable, rom_enable, ram_enable: std_logic;
-signal page_rom_sel: std_logic := '0'; -- bit 4
 signal ram_page: std_logic_vector(2 downto 0);
 signal sram_di, vid_di: std_logic_vector(7 downto 0);
 signal cpu_wait_n, cpu_irq_n, cpu_nmi_n, cpu_busreq_n, cpu_mreq_n, cpu_ioreq_n: std_logic;
@@ -158,22 +156,33 @@ signal cpu_wr_n: std_logic;
 signal cpu_a: std_logic_vector(15 downto 0);
 signal cpu_di, cpu_do, ula_do: std_logic_vector(7 downto 0);
 signal ula_border: std_logic_vector(2 downto 0);
-signal ula_ear_out, ula_mic_out, ula_ear_in: std_logic;
+signal ula_ear_out, ula_ear_in: std_logic;
 signal vid_a: std_logic_vector(12 downto 0);
 signal vid_r_out, vid_g_out, vid_b_out: std_logic_vector(7 downto 0);
-signal vid_vsync_n, vid_hsync_n, vid_csync_n, vid_hcsync_n: std_logic;
-signal vid_is_border, vid_is_valid, vid_pixclk, vid_flashclk, vid_irq_n: std_logic;
+signal vid_vsync_n, vid_hcsync_n: std_logic;
+signal vid_is_valid, vid_pixclk, vid_irq_n: std_logic;
 signal keyb: std_logic_vector(4 downto 0);
+--signal counter: unsigned(19 downto 0);
 begin
     pll: pll_main port map (pll_reset, clk50, clk28, pll_locked);
     clken: clocks port map (clk28, reset_n, clk3_5, clk14);
+	 --clk3_5 <= not (counter(0) or counter(1) or counter(2));
+	 --clk14 <= counter(0);
+
+--    process (reset_n, clk28)
+--    begin
+--        if reset_n = '0' then
+--            counter <= (others => '0');
+--        elsif falling_edge(clk28) then
+--            counter <= counter + 1;
+--        end if;
+--    end process;
 	 
     cpu: T80se port map (
         reset_n, clk28, clk3_5, 
         cpu_wait_n, cpu_irq_n, cpu_nmi_n,
         cpu_busreq_n, cpu_mreq_n, cpu_ioreq_n,
-		  cpu_wr_n, cpu_a, cpu_di, cpu_do
-        );
+		  cpu_wr_n, cpu_a, cpu_di, cpu_do);
     
     cpu_irq_n <= vid_irq_n; -- VSYNC interrupt routed to CPU
     cpu_wait_n <= '1';
@@ -186,14 +195,14 @@ begin
     begin
         if reset_n = '0' then
             ula_ear_out <= '0';
-            ula_mic_out <= '0';
+            --ula_mic_out <= '0';
             ula_border <= (others => '0');
             ula_do <= (others => '0');
         elsif rising_edge(clk28) then
             ula_do <= '0' & EAR_IN & '0' & keyb;
             if ula_enable = '1' and cpu_wr_n = '0' then
                 ula_ear_out <= cpu_do(4);
-                ula_mic_out <= cpu_do(3);
+                --ula_mic_out <= cpu_do(3);
                 ula_border <= cpu_do(2 downto 0);
             end if;
         end if;
@@ -204,9 +213,7 @@ begin
         vid_a, vid_di, ula_border,
         vid_r_out, vid_g_out, vid_b_out,
         vid_vsync_n, vid_hcsync_n,
-        vid_is_border, vid_is_valid,
-        vid_pixclk, vid_flashclk,
-        vid_irq_n);
+        vid_is_valid, vid_pixclk, vid_irq_n);
 
     pll_reset <= not KEY(0);
     reset_n <= not (pll_reset or not pll_locked);
@@ -236,7 +243,7 @@ begin
     vid_di <= SRAM_DQ(15 downto 8) when vid_a(0) = '1' else SRAM_DQ(7 downto 0);
 
     -- Synchronous outputs to SRAM
-    process (clk28, reset_n)
+    process (clk28, reset_n, ram_enable, cpu_wr_n)
     variable sram_write: std_logic;
     begin
         sram_write := ram_enable and not cpu_wr_n;
@@ -284,16 +291,15 @@ begin
     VGA_VS <= vid_vsync_n;
     VGA_BLANK_N <= vid_is_valid;
     VGA_CLK <= vid_pixclk;
-    GPIO(1) <= ula_ear_out;
-    --GPIO <= "000000000000000000000000000000000" & ula_ear_out & ula_ear_out;
+    GPIO <= "000000000000000000000000000000000" & ula_ear_out & '0';
     HEX0 <= "0000000";
     HEX1 <= "1111000";
     HEX2 <= "0000010";
-    HEX3 <= "0000000";
---    HEX4 <= "0000000";
---    HEX5 <= "0000000";
---    HEX6 <= "0000000";
---    HEX7 <= "1111001";
+    HEX3 <= "0010010";
+    HEX4 <= "0011001";
+    HEX5 <= "0110000";
+    HEX6 <= "0100100";
+    HEX7 <= "1111001";
     LEDG <= "11000000";
 	 LEDR <= "000000000011111111";
     AUD_DACLRCK <= '1';
@@ -303,6 +309,7 @@ begin
 	 AUD_XCK <= '1';
 	 AUD_BCLK <= '1';
 	 AUD_DACDAT <= '1';
+	 EX_IO <= "0000000";
 end architecture;
 
 
