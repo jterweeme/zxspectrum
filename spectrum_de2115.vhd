@@ -69,8 +69,9 @@ port (
     FL_ADDR: out std_logic_vector(22 downto 0);
     FL_DQ: inout std_logic_vector(7 downto 0);
     FL_RST_N, FL_OE_N, FL_WE_N, FL_CE_N: out std_logic;
-    GPIO: inout std_logic_vector(17 downto 0);
+    GPIO: inout std_logic_vector(12 downto 0);
 	 GPIO2: out std_logic_vector(15 downto 0);
+	 GPIO3: inout std_logic_vector(4 downto 0);
 	 EAR_OUT: inout std_logic;
 	 EAR_IN: in std_logic;
 	 EX_IO: inout std_logic_vector(6 downto 0);
@@ -285,7 +286,8 @@ begin
 
     VGA_BLANK_N <= vid_is_valid;
     VGA_CLK <= vid_pixclk;
-    GPIO <= "000000000000000000";
+    GPIO <= "0000000000000";
+	 GPIO3 <= "00000";
 	 GPIO2 <= cpu_a;
     HEX0 <= "0000000";
     HEX1 <= "1111000";
