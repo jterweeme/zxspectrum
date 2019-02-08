@@ -42,16 +42,10 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity keyboard is
 port (
-	CLK			:	in	std_logic;
-	nRESET		:	in	std_logic;
-	PS2_CLK, PS2_DATA: in std_logic;
-	A			:	in	std_logic_vector(15 downto 0);
-	-- Column outputs to ULA
-	KEYB		:	out	std_logic_vector(4 downto 0)
-		-- Debug port
---	DIG0		:	out	std_logic_vector(3 downto 0);
---	DIG1		:	out	std_logic_vector(3 downto 0)
-	);
+    CLK, nRESET, PS2_CLK, PS2_DATA: in std_logic;
+    A: in std_logic_vector(15 downto 0);
+    KEYB: out std_logic_vector(4 downto 0)
+    );
 end keyboard;
 
 architecture rtl of keyboard is
@@ -118,16 +112,6 @@ begin
 		keyb_data, keyb_valid, keyb_error
 		);
 		
---	ps2 : ps2_controller port map (
---		CLK, nRESET,
---		keyb_out, keyb_dosend,
---		PS2_CLK, PS2_DATA,
---		keyb_cmdsent, keyb_error, 
---		keyb_data, keyb_valid
---		);
-
-
-	-- Output addressed row to ULA
 	KEYB <= keys(0) when A(8) = '0' else
 		keys(1) when A(9) = '0' else
 		keys(2) when A(10) = '0' else

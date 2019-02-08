@@ -69,7 +69,8 @@ port (
     FL_ADDR: out std_logic_vector(22 downto 0);
     FL_DQ: inout std_logic_vector(7 downto 0);
     FL_RST_N, FL_OE_N, FL_WE_N, FL_CE_N: out std_logic;
-    GPIO: inout std_logic_vector(33 downto 0);
+    GPIO: inout std_logic_vector(17 downto 0);
+	 GPIO2: out std_logic_vector(15 downto 0);
 	 EAR_OUT: inout std_logic;
 	 EAR_IN: in std_logic;
 	 EX_IO: inout std_logic_vector(6 downto 0);
@@ -164,7 +165,7 @@ signal ula_ear_out, ula_ear_in: std_logic;
 signal vid_a: std_logic_vector(12 downto 0);
 signal vid_is_valid, vid_pixclk, vid_irq_n: std_logic;
 signal keyb: std_logic_vector(4 downto 0);
---signal counter: unsigned(19 downto 0);
+signal counter: unsigned(19 downto 0);
 begin
     pll: pll_main port map (pll_reset, clk50, clk28, pll_locked);
     clken: clocks port map (clk28, reset_n, clk3_5, clk14);
@@ -284,7 +285,8 @@ begin
 
     VGA_BLANK_N <= vid_is_valid;
     VGA_CLK <= vid_pixclk;
-    GPIO <= "0000000000000000000000000000000000";
+    GPIO <= "000000000000000000";
+	 GPIO2 <= cpu_a;
     HEX0 <= "0000000";
     HEX1 <= "1111000";
     HEX2 <= "0000010";
