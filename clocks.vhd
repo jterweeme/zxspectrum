@@ -41,16 +41,9 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity clocks is
 port (
-	-- 28 MHz master clock
 	CLK				:	in std_logic;
-	-- Master reset
 	nRESET			:	in std_logic;
-	
-	-- 1.75 MHz clock enable for sound
-	--CLKEN_PSG		:	out	std_logic;
-	-- 3.5 MHz clock enable (1 in 8)
 	CLKEN_CPU		:	out std_logic;
-	-- 14 MHz clock enable (out of phase with CPU)
 	CLKEN_VID		:	out std_logic
 	);
 end clocks;
@@ -63,12 +56,8 @@ end clocks;
 architecture clocks_arch of clocks is
 signal counter	:	unsigned(19 downto 0);
 begin
-	-- X000
 	CLKEN_CPU <= not (counter(0) or counter(1) or counter(2));
-	-- XXX1
 	CLKEN_VID <= counter(0);
-	-- 1111
-	--CLKEN_PSG <= counter(0) and counter(1) and counter(2) and counter(3);
 
 	process(nRESET,CLK)
 	begin

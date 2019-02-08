@@ -305,7 +305,6 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[30]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[31]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[32]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[33]
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[34]
 
 #============================================================
 # HSMC, HSMC connect to HSMC Default
@@ -528,7 +527,6 @@ set_instance_assignment -name IO_STANDARD "2.5 V" -to LEDR[2]
 set_location_assignment PIN_AB28 -to SW[0]
 set_location_assignment PIN_AD15 -to GPIO[8]
 set_location_assignment PIN_AE15 -to GPIO[9]
-set_location_assignment PIN_AH23 -to GPIO[34]
 
 set_location_assignment PIN_G9 -to UART_TXD
 set_location_assignment PIN_A10 -to VGA_B[1]
@@ -643,4 +641,17 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to EX_IO[2]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to EX_IO[1]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to EX_IO[0]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to EAR_IN
+set_location_assignment PIN_A17 -to ENET0_GTX_CLK
+set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET0_GTX_CLK
+set_location_assignment PIN_A21 -to ENET0_INT_N
+set_location_assignment PIN_C14 -to ENET0_LINK100
+set_location_assignment PIN_C20 -to ENET0_MDC
+set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET0_INT_N
+set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET0_LINK100
+set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET0_MDC
+set_location_assignment PIN_B21 -to ENET0_MDIO
+set_instance_assignment -name IO_STANDARD "2.5 V" -to ENET0_MDIO
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO2
+set_location_assignment PIN_AH23 -to EAR_OUT
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to EAR_OUT
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

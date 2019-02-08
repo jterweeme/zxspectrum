@@ -69,9 +69,15 @@ port (
     FL_ADDR: out std_logic_vector(22 downto 0);
     FL_DQ: inout std_logic_vector(7 downto 0);
     FL_RST_N, FL_OE_N, FL_WE_N, FL_CE_N: out std_logic;
-    GPIO: inout std_logic_vector(34 downto 0);
+    GPIO: inout std_logic_vector(33 downto 0);
+	 EAR_OUT: inout std_logic;
 	 EAR_IN: in std_logic;
-	 EX_IO: inout std_logic_vector(6 downto 0)
+	 EX_IO: inout std_logic_vector(6 downto 0);
+	 ENET0_GTX_CLK: out std_logic;
+	 ENET0_INT_N: out std_logic;
+	 ENET0_LINK100: in std_logic;
+	 ENET0_MDC: out std_logic;
+	 ENET0_MDIO: out std_logic
     );
 end entity;
 
@@ -128,10 +134,8 @@ port(
     BORDER_IN: in std_logic_vector(2 downto 0);
     R, G, B: out std_logic_vector(7 downto 0);
     nVSYNC, nHCSYNC: out std_logic;
-    --IS_BORDER: out std_logic;
     IS_VALID: out std_logic;
     PIXCLK: out std_logic;
-    --FLASHCLK: out std_logic;
     nIRQ: out std_logic
 );
 end component;
@@ -158,8 +162,6 @@ signal cpu_di, cpu_do, ula_do: std_logic_vector(7 downto 0);
 signal ula_border: std_logic_vector(2 downto 0);
 signal ula_ear_out, ula_ear_in: std_logic;
 signal vid_a: std_logic_vector(12 downto 0);
-signal vid_r_out, vid_g_out, vid_b_out: std_logic_vector(7 downto 0);
-signal vid_vsync_n, vid_hcsync_n: std_logic;
 signal vid_is_valid, vid_pixclk, vid_irq_n: std_logic;
 signal keyb: std_logic_vector(4 downto 0);
 --signal counter: unsigned(19 downto 0);
@@ -191,8 +193,7 @@ begin
 
     kb: keyboard port map (clk28, reset_n, PS2_CLK, PS2_DAT, cpu_a, keyb);
 
-    process (clk28, reset_n)
-    begin
+    ula_port: process (clk28, reset_n) begin
         if reset_n = '0' then
             ula_ear_out <= '0';
             --ula_mic_out <= '0';
@@ -201,7 +202,7 @@ begin
         elsif rising_edge(clk28) then
             ula_do <= '0' & EAR_IN & '0' & keyb;
             if ula_enable = '1' and cpu_wr_n = '0' then
-                ula_ear_out <= cpu_do(4);
+                EAR_OUT <= cpu_do(4);
                 --ula_mic_out <= cpu_do(3);
                 ula_border <= cpu_do(2 downto 0);
             end if;
@@ -209,10 +210,8 @@ begin
     end process;		  
 		  
     vid: video port map (
-        clk28, clk14, reset_n,
-        vid_a, vid_di, ula_border,
-        vid_r_out, vid_g_out, vid_b_out,
-        vid_vsync_n, vid_hcsync_n,
+        clk28, clk14, reset_n, vid_a, vid_di, ula_border,
+		  VGA_R, VGA_G, VGA_B, VGA_VS, VGA_HS,
         vid_is_valid, vid_pixclk, vid_irq_n);
 
     pll_reset <= not KEY(0);
@@ -226,8 +225,7 @@ begin
             cpu_a(14) & cpu_a(15 downto 14); -- A=bank: 00=XXX, 01=101, 10=010, 11=XXX
 
     -- CPU data bus mux
-    cpu_di <=
-        sram_di when ram_enable = '1' else
+    cpu_di <= sram_di when ram_enable = '1' else
         FL_DQ when rom_enable = '1' else
         ula_do when ula_enable = '1' else
         (others => '1');
@@ -284,14 +282,9 @@ begin
         end if;
     end process;
 
-    VGA_R <= vid_r_out;
-    VGA_G <= vid_g_out;
-    VGA_B <= vid_b_out;
-    VGA_HS <= vid_hcsync_n;
-    VGA_VS <= vid_vsync_n;
     VGA_BLANK_N <= vid_is_valid;
     VGA_CLK <= vid_pixclk;
-    GPIO <= "000000000000000000000000000000000" & ula_ear_out & '0';
+    GPIO <= "0000000000000000000000000000000000";
     HEX0 <= "0000000";
     HEX1 <= "1111000";
     HEX2 <= "0000010";
@@ -310,6 +303,10 @@ begin
 	 AUD_BCLK <= '1';
 	 AUD_DACDAT <= '1';
 	 EX_IO <= "0000000";
+	 ENET0_GTX_CLK <= '0';
+	 ENET0_INT_N <= '0';
+	 ENET0_MDC <= '0';
+	 ENET0_MDIO <= '0';
 end architecture;
 
 
