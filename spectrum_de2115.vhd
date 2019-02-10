@@ -47,7 +47,6 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity spectrum_de2115 is
-generic (ROM_OFFSET: std_logic_vector(7 downto 0) := "00000000");
 port (
     clk50: in std_logic;
     SW: in std_logic_vector(9 downto 0);
@@ -101,6 +100,17 @@ component rom is
 		  clock: in STD_LOGIC  := '1';
 		  q: out STD_LOGIC_VECTOR (7 downto 0)
 	 );
+end component;
+
+component ram is
+    port
+    (
+        address: IN STD_LOGIC_VECTOR (15 DOWNTO 0);
+        clock: IN STD_LOGIC  := '1';
+		  data: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+		  wren: IN STD_LOGIC ;
+		  q: OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
+    );
 end component;
 
 component clocks is
@@ -176,22 +186,26 @@ signal vid_a: std_logic_vector(12 downto 0);
 signal vid_is_valid, vid_pixclk, vid_irq_n: std_logic;
 signal keyb: std_logic_vector(4 downto 0);
 signal counter: unsigned(19 downto 0);
+signal bogus1: std_logic_vector(15 downto 0);
+signal bogus2, bogus3: std_logic;
+signal bogus4, bogus5: std_logic_vector(7 downto 0);
 begin
     pll: pll_main port map (pll_reset, clk50, clk28, pll_locked);
-    clken: clocks port map (clk28, reset_n, clk3_5, clk14);
-	 --clk3_5 <= not (counter(0) or counter(1) or counter(2));
-	 --clk14 <= counter(0);
+    --clken: clocks port map (clk28, reset_n, clk3_5, clk14);
+	 clk3_5 <= not (counter(0) or counter(1) or counter(2));
+	 clk14 <= counter(0);
 
---    process (reset_n, clk28)
---    begin
---        if reset_n = '0' then
---            counter <= (others => '0');
---        elsif falling_edge(clk28) then
---            counter <= counter + 1;
---        end if;
---    end process;
+    process (reset_n, clk28)
+    begin
+        if reset_n = '0' then
+            counter <= (others => '0');
+        elsif falling_edge(clk28) then
+            counter <= counter + 1;
+        end if;
+    end process;
 	 
 	 romx: rom port map (cpu_a(13 downto 0), clk28, rom_di);
+    ramx: ram port map (bogus1, bogus2, bogus4, bogus3, bogus5);
 	 
     cpu: T80se port map (
         reset_n, clk28, clk3_5, 
@@ -293,14 +307,14 @@ begin
     VGA_BLANK_N <= vid_is_valid;
     VGA_CLK <= vid_pixclk;
     GPIO <= "0000000000000";
-	 GPIO3 <= "00000";
+	 --GPIO3 <= "00000";
+	 --keyb <= GPIO3;
 	 GPIO2 <= cpu_a;
 	 FL_RST_N <= '0';
     FL_CE_N <= '0';
     FL_OE_N <= '0';
     FL_WE_N <= '1';
 	 FL_ADDR <= (others => '0');
-    --FL_ADDR <= '0' & ROM_OFFSET & cpu_a(13 downto 0);
     HEX0 <= "0000000";
     HEX1 <= "1111000";
     HEX2 <= "0000010";
