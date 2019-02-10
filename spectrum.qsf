@@ -510,7 +510,6 @@ set_global_assignment -name VHDL_FILE T80/T80_MCode.vhd
 set_global_assignment -name VHDL_FILE T80/T80_Pack.vhd
 set_global_assignment -name VHDL_FILE T80/T80_Reg.vhd
 set_global_assignment -name VHDL_FILE T80/T80se.vhd
-set_global_assignment -name VHDL_FILE clocks.vhd
 set_global_assignment -name VHDL_FILE ps2_intf.vhd
 set_global_assignment -name VHDL_FILE keyboard.vhd
 set_global_assignment -name QIP_FILE pll_main.qip

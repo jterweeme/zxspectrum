@@ -113,15 +113,6 @@ component ram is
     );
 end component;
 
-component clocks is
-port (
-    CLK: in std_logic;
-    nRESET: in std_logic;
-    CLKEN_CPU: out std_logic;
-    CLKEN_VID: out std_logic
-    );
-end component;
-
 component T80se is
     generic(
         Mode: integer := 0;    -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
@@ -191,7 +182,6 @@ signal bogus2, bogus3: std_logic;
 signal bogus4, bogus5: std_logic_vector(7 downto 0);
 begin
     pll: pll_main port map (pll_reset, clk50, clk28, pll_locked);
-    --clken: clocks port map (clk28, reset_n, clk3_5, clk14);
 	 clk3_5 <= not (counter(0) or counter(1) or counter(2));
 	 clk14 <= counter(0);
 
