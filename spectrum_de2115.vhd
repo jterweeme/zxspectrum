@@ -84,14 +84,23 @@ port (
 end entity;
 
 architecture rtl of spectrum_de2115 is
-component pll_main IS
-    PORT
+component pll_main is
+    port
     (
         areset: in std_logic := '0';
         inclk0: in std_logic := '0';
         c0: out std_logic;
         locked: out std_logic 
     );
+end component;
+
+component rom is
+    port
+	 (
+	     address: in STD_LOGIC_VECTOR (13 downto 0);
+		  clock: in STD_LOGIC  := '1';
+		  q: out STD_LOGIC_VECTOR (7 downto 0)
+	 );
 end component;
 
 component clocks is
@@ -156,7 +165,7 @@ signal clk28, clk3_5, clk14: std_logic;
 signal reset_n: std_logic;
 signal ula_enable, rom_enable, ram_enable: std_logic;
 signal ram_page: std_logic_vector(2 downto 0);
-signal sram_di, vid_di: std_logic_vector(7 downto 0);
+signal sram_di, vid_di, rom_di: std_logic_vector(7 downto 0);
 signal cpu_wait_n, cpu_irq_n, cpu_nmi_n, cpu_busreq_n, cpu_mreq_n, cpu_ioreq_n: std_logic;
 signal cpu_wr_n: std_logic;
 signal cpu_a: std_logic_vector(15 downto 0);
@@ -181,6 +190,8 @@ begin
 --            counter <= counter + 1;
 --        end if;
 --    end process;
+	 
+	 romx: rom port map (cpu_a(13 downto 0), clk28, rom_di);
 	 
     cpu: T80se port map (
         reset_n, clk28, clk3_5, 
@@ -221,22 +232,17 @@ begin
     ula_enable <= (not cpu_ioreq_n) and not cpu_a(0); -- all even IO addresses
     rom_enable <= (not cpu_mreq_n) and not (cpu_a(15) or cpu_a(14));
     ram_enable <= not (cpu_mreq_n or rom_enable);
-    -- 128K has pageable RAM at 0xc000
+    
     ram_page <=
             "000" when cpu_a(15 downto 14) = "11" else -- Selectable bank at 0xc000
             cpu_a(14) & cpu_a(15 downto 14); -- A=bank: 00=XXX, 01=101, 10=010, 11=XXX
 
     -- CPU data bus mux
     cpu_di <= sram_di when ram_enable = '1' else
-        FL_DQ when rom_enable = '1' else
+        rom_di when rom_enable = '1' else
         ula_do when ula_enable = '1' else
         (others => '1');
 
-    FL_RST_N <= reset_n;
-    FL_CE_N <= '0';
-    FL_OE_N <= '0';
-    FL_WE_N <= '1';
-    FL_ADDR <= '0' & ROM_OFFSET & cpu_a(13 downto 0);
     SRAM_CE_N <= '0';
     SRAM_OE_N <= '0';
     sram_di <= SRAM_DQ(15 downto 8) when cpu_a(0) = '1' else SRAM_DQ(7 downto 0);
@@ -289,6 +295,12 @@ begin
     GPIO <= "0000000000000";
 	 GPIO3 <= "00000";
 	 GPIO2 <= cpu_a;
+	 FL_RST_N <= '0';
+    FL_CE_N <= '0';
+    FL_OE_N <= '0';
+    FL_WE_N <= '1';
+	 FL_ADDR <= (others => '0');
+    --FL_ADDR <= '0' & ROM_OFFSET & cpu_a(13 downto 0);
     HEX0 <= "0000000";
     HEX1 <= "1111000";
     HEX2 <= "0000010";
