@@ -107,9 +107,9 @@ component ram is
     (
         address: IN STD_LOGIC_VECTOR (15 DOWNTO 0);
         clock: IN STD_LOGIC  := '1';
-		  data: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+		  data: IN STD_LOGIC_VECTOR (15 DOWNTO 0);
 		  wren: IN STD_LOGIC ;
-		  q: OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
+		  q: OUT STD_LOGIC_VECTOR (15 DOWNTO 0)
     );
 end component;
 
@@ -177,9 +177,9 @@ signal vid_a: std_logic_vector(12 downto 0);
 signal vid_is_valid, vid_pixclk, vid_irq_n: std_logic;
 signal keyb: std_logic_vector(4 downto 0);
 signal counter: unsigned(19 downto 0);
-signal bogus1: std_logic_vector(15 downto 0);
-signal bogus2, bogus3: std_logic;
-signal bogus4, bogus5: std_logic_vector(7 downto 0);
+signal ram_a: std_logic_vector(15 downto 0);
+signal ram_wren, bogus3: std_logic;
+signal ram_in, ram_out: std_logic_vector(15 downto 0);
 begin
     pll: pll_main port map (pll_reset, clk50, clk28, pll_locked);
 	 clk3_5 <= not (counter(0) or counter(1) or counter(2));
@@ -195,7 +195,7 @@ begin
     end process;
 	 
 	 romx: rom port map (cpu_a(13 downto 0), clk28, rom_di);
-    ramx: ram port map (bogus1, bogus2, bogus4, bogus3, bogus5);
+    ramx: ram port map (ram_a, clk28, ram_in, ram_wren, ram_out);
 	 
     cpu: T80se port map (
         reset_n, clk28, clk3_5, 
@@ -229,73 +229,86 @@ begin
     vid: video port map (
         clk28, clk14, reset_n, vid_a, vid_di, ula_border,
 		  VGA_R, VGA_G, VGA_B, VGA_VS, VGA_HS,
-        vid_is_valid, vid_pixclk, vid_irq_n);
+        VGA_BLANK_N, VGA_CLK, vid_irq_n);
 
     pll_reset <= not KEY(0);
     reset_n <= not (pll_reset or not pll_locked);
     ula_enable <= (not cpu_ioreq_n) and not cpu_a(0); -- all even IO addresses
     rom_enable <= (not cpu_mreq_n) and not (cpu_a(15) or cpu_a(14));
     ram_enable <= not (cpu_mreq_n or rom_enable);
-    
-    ram_page <=
-            "000" when cpu_a(15 downto 14) = "11" else -- Selectable bank at 0xc000
-            cpu_a(14) & cpu_a(15 downto 14); -- A=bank: 00=XXX, 01=101, 10=010, 11=XXX
+    ram_page <= "000" when cpu_a(15 downto 14) = "11" else cpu_a(14) & cpu_a(15 downto 14);
 
-    -- CPU data bus mux
-    cpu_di <= sram_di when ram_enable = '1' else
+    cpu_mux: cpu_di <= sram_di when ram_enable = '1' else
         rom_di when rom_enable = '1' else
         ula_do when ula_enable = '1' else
         (others => '1');
 
     SRAM_CE_N <= '0';
     SRAM_OE_N <= '0';
+	 --sram_di <= ram_in(15 downto 8) when cpu_a(0) = '1' else ram_in(7 downto 0);
+	 --vid_di <= ram_in(15 downto 8) when vid_a(0) = '1' else ram_in(7 downto 0);
     sram_di <= SRAM_DQ(15 downto 8) when cpu_a(0) = '1' else SRAM_DQ(7 downto 0);
     vid_di <= SRAM_DQ(15 downto 8) when vid_a(0) = '1' else SRAM_DQ(7 downto 0);
 
-    -- Synchronous outputs to SRAM
+--	 process (clk28, reset_n, ram_enable, cpu_wr_n)
+--	 variable sram_write: std_logic;
+--	 begin
+--	     sram_write := ram_enable and not cpu_wr_n;
+--		  if reset_n = '0' then
+--		      ram_wren <= '0';
+--		  elsif rising_edge(clk28) then
+--		      if clk14 = '1' then
+--				    ram_wren <= sram_write;
+--					 ram_a <= cpu_a(15 downto 0);
+--					 ram_out <= cpu_do;
+--				else
+--				    ram_wren <= '0';
+--					 ram_a <= "010" & vid_a(12 downto 0);
+--				end if;
+--		  end if;
+--	 end process;
+	 
     process (clk28, reset_n, ram_enable, cpu_wr_n)
     variable sram_write: std_logic;
     begin
         sram_write := ram_enable and not cpu_wr_n;
-
         if reset_n = '0' then
             SRAM_WE_N <= '1';
             SRAM_UB_N <= '1';
             SRAM_LB_N <= '1';
             SRAM_DQ <= (others => 'Z');
+				ram_wren <= '0';
         elsif rising_edge(clk28) then
             SRAM_DQ <= (others => 'Z');
-
-            -- Register SRAM signals to outputs (clock must be at least 2x CPU clock)
             if clk14 = '1' then
-                -- Fetch data from previous CPU cycle
-                -- Select upper or lower byte depending on LSb of address
+				    ram_wren <= sram_write;
                 SRAM_UB_N <= not cpu_a(0);
                 SRAM_LB_N <= cpu_a(0);
                 SRAM_WE_N <= not sram_write;
                 if rom_enable = '0' then
+					     ram_a <= ram_page & cpu_a(13 downto 1);
                     SRAM_ADDR <= "0000" & ram_page & cpu_a(13 downto 1);
                 end if;
                 if sram_write = '1' then
+					     if cpu_a(0) = '1' then
+						      ram_out(15 downto 8) <= cpu_do;
+						  else
+						      ram_out(7 downto 0) <= cpu_do;
+						  end if;
                     SRAM_DQ(15 downto 8) <= cpu_do;
                     SRAM_DQ(7 downto 0) <= cpu_do;
                 end if;
             else
-                -- Fetch data from previous display cycle
-                -- Because we have time division instead of bus contention
-                -- we don't bother using the vid_rd_n signal from the ULA
-                -- No writes here so just enable both upper and lower bytes and let
-                -- the bus mux select the right one
                 SRAM_UB_N <= '0';
                 SRAM_LB_N <= '0';
                 SRAM_WE_N <= '1';
                 SRAM_ADDR <= "00001010" & vid_a(12 downto 1);
+					 ram_wren <= '0';
+					 ram_a <= "1010" & vid_a(12 downto 1);
             end if;
         end if;
     end process;
 
-    VGA_BLANK_N <= vid_is_valid;
-    VGA_CLK <= vid_pixclk;
     GPIO <= "0000000000000";
 	 --GPIO3 <= "00000";
 	 --keyb <= GPIO3;

@@ -44,16 +44,16 @@ ENTITY ram IS
 	(
 		address		: IN STD_LOGIC_VECTOR (15 DOWNTO 0);
 		clock		: IN STD_LOGIC  := '1';
-		data		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+		data		: IN STD_LOGIC_VECTOR (15 DOWNTO 0);
 		wren		: IN STD_LOGIC ;
-		q		: OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
+		q		: OUT STD_LOGIC_VECTOR (15 DOWNTO 0)
 	);
 END ram;
 
 
 ARCHITECTURE SYN OF ram IS
 
-	SIGNAL sub_wire0	: STD_LOGIC_VECTOR (7 DOWNTO 0);
+	SIGNAL sub_wire0	: STD_LOGIC_VECTOR (15 DOWNTO 0);
 
 
 
@@ -77,14 +77,14 @@ ARCHITECTURE SYN OF ram IS
 	PORT (
 			address_a	: IN STD_LOGIC_VECTOR (15 DOWNTO 0);
 			clock0	: IN STD_LOGIC ;
-			data_a	: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+			data_a	: IN STD_LOGIC_VECTOR (15 DOWNTO 0);
 			wren_a	: IN STD_LOGIC ;
-			q_a	: OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
+			q_a	: OUT STD_LOGIC_VECTOR (15 DOWNTO 0)
 	);
 	END COMPONENT;
 
 BEGIN
-	q    <= sub_wire0(7 DOWNTO 0);
+	q    <= sub_wire0(15 DOWNTO 0);
 
 	altsyncram_component : altsyncram
 	GENERIC MAP (
@@ -100,7 +100,7 @@ BEGIN
 		power_up_uninitialized => "FALSE",
 		read_during_write_mode_port_a => "NEW_DATA_NO_NBE_READ",
 		widthad_a => 16,
-		width_a => 8,
+		width_a => 16,
 		width_byteena_a => 1
 	)
 	PORT MAP (
@@ -149,7 +149,7 @@ END SYN;
 -- Retrieval info: PRIVATE: UseDQRAM NUMERIC "1"
 -- Retrieval info: PRIVATE: WRCONTROL_ACLR_A NUMERIC "0"
 -- Retrieval info: PRIVATE: WidthAddr NUMERIC "16"
--- Retrieval info: PRIVATE: WidthData NUMERIC "8"
+-- Retrieval info: PRIVATE: WidthData NUMERIC "16"
 -- Retrieval info: PRIVATE: rden NUMERIC "0"
 -- Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
 -- Retrieval info: CONSTANT: CLOCK_ENABLE_INPUT_A STRING "BYPASS"
@@ -164,18 +164,18 @@ END SYN;
 -- Retrieval info: CONSTANT: POWER_UP_UNINITIALIZED STRING "FALSE"
 -- Retrieval info: CONSTANT: READ_DURING_WRITE_MODE_PORT_A STRING "NEW_DATA_NO_NBE_READ"
 -- Retrieval info: CONSTANT: WIDTHAD_A NUMERIC "16"
--- Retrieval info: CONSTANT: WIDTH_A NUMERIC "8"
+-- Retrieval info: CONSTANT: WIDTH_A NUMERIC "16"
 -- Retrieval info: CONSTANT: WIDTH_BYTEENA_A NUMERIC "1"
 -- Retrieval info: USED_PORT: address 0 0 16 0 INPUT NODEFVAL "address[15..0]"
 -- Retrieval info: USED_PORT: clock 0 0 0 0 INPUT VCC "clock"
--- Retrieval info: USED_PORT: data 0 0 8 0 INPUT NODEFVAL "data[7..0]"
--- Retrieval info: USED_PORT: q 0 0 8 0 OUTPUT NODEFVAL "q[7..0]"
+-- Retrieval info: USED_PORT: data 0 0 16 0 INPUT NODEFVAL "data[15..0]"
+-- Retrieval info: USED_PORT: q 0 0 16 0 OUTPUT NODEFVAL "q[15..0]"
 -- Retrieval info: USED_PORT: wren 0 0 0 0 INPUT NODEFVAL "wren"
 -- Retrieval info: CONNECT: @address_a 0 0 16 0 address 0 0 16 0
 -- Retrieval info: CONNECT: @clock0 0 0 0 0 clock 0 0 0 0
--- Retrieval info: CONNECT: @data_a 0 0 8 0 data 0 0 8 0
+-- Retrieval info: CONNECT: @data_a 0 0 16 0 data 0 0 16 0
 -- Retrieval info: CONNECT: @wren_a 0 0 0 0 wren 0 0 0 0
--- Retrieval info: CONNECT: q 0 0 8 0 @q_a 0 0 8 0
+-- Retrieval info: CONNECT: q 0 0 16 0 @q_a 0 0 16 0
 -- Retrieval info: GEN_FILE: TYPE_NORMAL ram.vhd TRUE
 -- Retrieval info: GEN_FILE: TYPE_NORMAL ram.inc FALSE
 -- Retrieval info: GEN_FILE: TYPE_NORMAL ram.cmp FALSE
