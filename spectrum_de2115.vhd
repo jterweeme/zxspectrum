@@ -50,7 +50,7 @@ entity spectrum_de2115 is
 port (
     clk50: in std_logic;
     SW: in std_logic_vector(9 downto 0);
-	 KEY: in std_logic_vector(3 downto 0);
+    KEY: in std_logic_vector(3 downto 0);
     HEX0, HEX1, HEX2, HEX3, HEX4, HEX5, HEX6, HEX7: out std_logic_vector(6 downto 0);
     LEDR: out std_logic_vector(17 downto 0);
     LEDG: out std_logic_vector(7 downto 0);
@@ -69,50 +69,21 @@ port (
     FL_DQ: inout std_logic_vector(7 downto 0);
     FL_RST_N, FL_OE_N, FL_WE_N, FL_CE_N: out std_logic;
     GPIO: inout std_logic_vector(12 downto 0);
-	 GPIO2: out std_logic_vector(15 downto 0);
-	 GPIO3: inout std_logic_vector(4 downto 0);
-	 EAR_OUT: inout std_logic;
-	 EAR_IN: in std_logic;
-	 EX_IO: inout std_logic_vector(6 downto 0);
-	 ENET0_GTX_CLK: out std_logic;
-	 ENET0_INT_N: out std_logic;
-	 ENET0_LINK100: in std_logic;
-	 ENET0_MDC: out std_logic;
-	 ENET0_MDIO: out std_logic
+    GPIO2: out std_logic_vector(15 downto 0);
+    GPIO3: inout std_logic_vector(4 downto 0);
+    EAR_OUT: inout std_logic;
+    EAR_IN: in std_logic;
+    EX_IO: inout std_logic_vector(6 downto 0);
+    ENET0_GTX_CLK: out std_logic;
+    ENET0_INT_N: out std_logic;
+    ENET0_LINK100: in std_logic;
+    ENET0_MDC: out std_logic;
+    ENET0_MDIO: out std_logic
+	 --LCD_DATA: out std_logic_vector(7 downto 0)
     );
 end entity;
 
 architecture rtl of spectrum_de2115 is
-component pll_main is
-    port
-    (
-        areset: in std_logic := '0';
-        inclk0: in std_logic := '0';
-        c0: out std_logic;
-        locked: out std_logic 
-    );
-end component;
-
-component rom is
-    port
-	 (
-	     address: in STD_LOGIC_VECTOR (13 downto 0);
-		  clock: in STD_LOGIC  := '1';
-		  q: out STD_LOGIC_VECTOR (7 downto 0)
-	 );
-end component;
-
-component ram is
-    port
-    (
-        address: IN STD_LOGIC_VECTOR (15 DOWNTO 0);
-        clock: IN STD_LOGIC  := '1';
-		  data: IN STD_LOGIC_VECTOR (15 DOWNTO 0);
-		  wren: IN STD_LOGIC ;
-		  q: OUT STD_LOGIC_VECTOR (15 DOWNTO 0)
-    );
-end component;
-
 component T80se is
     generic(
         Mode: integer := 0;    -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
@@ -136,33 +107,8 @@ component T80se is
     );
 end component;
 
-component video is
-port(
-    CLK: in std_logic;
-    CLKEN: in std_logic;
-    nRESET: in std_logic;
-    VID_A: out std_logic_vector(12 downto 0);
-    VID_D_IN: in std_logic_vector(7 downto 0);
-    BORDER_IN: in std_logic_vector(2 downto 0);
-    R, G, B: out std_logic_vector(7 downto 0);
-    nVSYNC, nHCSYNC: out std_logic;
-    IS_VALID: out std_logic;
-    PIXCLK: out std_logic;
-    nIRQ: out std_logic
-);
-end component;
-
-component keyboard is
-port (
-    CLK, nRESET: in std_logic;
-    PS2_CLK, PS2_DATA: in std_logic;
-    A: in std_logic_vector(15 downto 0);
-    KEYB: out std_logic_vector(4 downto 0)
-    );
-end component;
-
 signal pll_reset, pll_locked: std_logic;
-signal clk28, clk3_5, clk14: std_logic;
+signal clk28, cpu_en, clk14: std_logic;
 signal reset_n: std_logic;
 signal ula_enable, rom_enable, ram_enable: std_logic;
 signal ram_page: std_logic_vector(2 downto 0);
@@ -177,13 +123,10 @@ signal vid_a: std_logic_vector(12 downto 0);
 signal vid_is_valid, vid_pixclk, vid_irq_n: std_logic;
 signal keyb: std_logic_vector(4 downto 0);
 signal counter: unsigned(19 downto 0);
-signal ram_a: std_logic_vector(15 downto 0);
-signal ram_wren, bogus3: std_logic;
-signal ram_in, ram_out: std_logic_vector(15 downto 0);
 begin
-    pll: pll_main port map (pll_reset, clk50, clk28, pll_locked);
-	 clk3_5 <= not (counter(0) or counter(1) or counter(2));
-	 clk14 <= counter(0);
+    pll: entity work.pll_main port map (pll_reset, clk50, clk28, pll_locked);
+    cpu_en <= not (counter(0) or counter(1) or counter(2));
+    clk14 <= counter(0);
 
     process (reset_n, clk28)
     begin
@@ -194,21 +137,20 @@ begin
         end if;
     end process;
 	 
-	 romx: rom port map (cpu_a(13 downto 0), clk28, rom_di);
-    ramx: ram port map (ram_a, clk28, ram_in, ram_wren, ram_out);
+    romx: entity work.rom port map (cpu_a(13 downto 0), clk28, rom_di);
 	 
     cpu: T80se port map (
-        reset_n, clk28, clk3_5, 
+        reset_n, clk28, cpu_en, 
         cpu_wait_n, cpu_irq_n, cpu_nmi_n,
         cpu_busreq_n, cpu_mreq_n, cpu_ioreq_n,
-		  cpu_wr_n, cpu_a, cpu_di, cpu_do);
+        cpu_wr_n, cpu_a, cpu_di, cpu_do);
     
     cpu_irq_n <= vid_irq_n; -- VSYNC interrupt routed to CPU
     cpu_wait_n <= '1';
     cpu_nmi_n <= '1';
     cpu_busreq_n <= '1';
 
-    kb: keyboard port map (clk28, reset_n, PS2_CLK, PS2_DAT, cpu_a, keyb);
+    kb: entity work.keyboard port map (clk28, reset_n, PS2_CLK, PS2_DAT, cpu_a, keyb);
 
     ula_port: process (clk28, reset_n) begin
         if reset_n = '0' then
@@ -226,9 +168,9 @@ begin
         end if;
     end process;		  
 		  
-    vid: video port map (
+    vid: entity work.video port map (
         clk28, clk14, reset_n, vid_a, vid_di, ula_border,
-		  VGA_R, VGA_G, VGA_B, VGA_VS, VGA_HS,
+        VGA_R, VGA_G, VGA_B, VGA_VS, VGA_HS,
         VGA_BLANK_N, VGA_CLK, vid_irq_n);
 
     pll_reset <= not KEY(0);
@@ -245,29 +187,9 @@ begin
 
     SRAM_CE_N <= '0';
     SRAM_OE_N <= '0';
-	 --sram_di <= ram_in(15 downto 8) when cpu_a(0) = '1' else ram_in(7 downto 0);
-	 --vid_di <= ram_in(15 downto 8) when vid_a(0) = '1' else ram_in(7 downto 0);
     sram_di <= SRAM_DQ(15 downto 8) when cpu_a(0) = '1' else SRAM_DQ(7 downto 0);
     vid_di <= SRAM_DQ(15 downto 8) when vid_a(0) = '1' else SRAM_DQ(7 downto 0);
 
---	 process (clk28, reset_n, ram_enable, cpu_wr_n)
---	 variable sram_write: std_logic;
---	 begin
---	     sram_write := ram_enable and not cpu_wr_n;
---		  if reset_n = '0' then
---		      ram_wren <= '0';
---		  elsif rising_edge(clk28) then
---		      if clk14 = '1' then
---				    ram_wren <= sram_write;
---					 ram_a <= cpu_a(15 downto 0);
---					 ram_out <= cpu_do;
---				else
---				    ram_wren <= '0';
---					 ram_a <= "010" & vid_a(12 downto 0);
---				end if;
---		  end if;
---	 end process;
-	 
     process (clk28, reset_n, ram_enable, cpu_wr_n)
     variable sram_write: std_logic;
     begin
@@ -277,24 +199,16 @@ begin
             SRAM_UB_N <= '1';
             SRAM_LB_N <= '1';
             SRAM_DQ <= (others => 'Z');
-				ram_wren <= '0';
         elsif rising_edge(clk28) then
             SRAM_DQ <= (others => 'Z');
             if clk14 = '1' then
-				    ram_wren <= sram_write;
                 SRAM_UB_N <= not cpu_a(0);
                 SRAM_LB_N <= cpu_a(0);
                 SRAM_WE_N <= not sram_write;
-                if rom_enable = '0' then
-					     ram_a <= ram_page & cpu_a(13 downto 1);
-                    SRAM_ADDR <= "0000" & ram_page & cpu_a(13 downto 1);
-                end if;
+					 if rom_enable = '0' then
+					     SRAM_ADDR <= "0000" & ram_page & cpu_a(13 downto 1);
+					 end if;
                 if sram_write = '1' then
-					     if cpu_a(0) = '1' then
-						      ram_out(15 downto 8) <= cpu_do;
-						  else
-						      ram_out(7 downto 0) <= cpu_do;
-						  end if;
                     SRAM_DQ(15 downto 8) <= cpu_do;
                     SRAM_DQ(7 downto 0) <= cpu_do;
                 end if;
@@ -303,21 +217,17 @@ begin
                 SRAM_LB_N <= '0';
                 SRAM_WE_N <= '1';
                 SRAM_ADDR <= "00001010" & vid_a(12 downto 1);
-					 ram_wren <= '0';
-					 ram_a <= "1010" & vid_a(12 downto 1);
             end if;
         end if;
     end process;
 
     GPIO <= "0000000000000";
-	 --GPIO3 <= "00000";
-	 --keyb <= GPIO3;
-	 GPIO2 <= cpu_a;
-	 FL_RST_N <= '0';
+    GPIO2 <= cpu_a;
+    FL_RST_N <= '0';
     FL_CE_N <= '0';
     FL_OE_N <= '0';
     FL_WE_N <= '1';
-	 FL_ADDR <= (others => '0');
+    FL_ADDR <= (others => '0');
     HEX0 <= "0000000";
     HEX1 <= "1111000";
     HEX2 <= "0000010";
@@ -327,19 +237,20 @@ begin
     HEX6 <= "0100100";
     HEX7 <= "1111001";
     LEDG <= "11000000";
-	 LEDR <= "000000000011111111";
+    LEDR <= "000000000011111111";
+	 --LCD_DATA <= "11111111";
     AUD_DACLRCK <= '1';
     AUD_ADCLRCK <= '1';
     UART_TXD <= '1';
-	 UART_RTS <= '1';
-	 AUD_XCK <= '1';
-	 AUD_BCLK <= '1';
-	 AUD_DACDAT <= '1';
-	 EX_IO <= "0000000";
-	 ENET0_GTX_CLK <= '0';
-	 ENET0_INT_N <= '0';
-	 ENET0_MDC <= '0';
-	 ENET0_MDIO <= '0';
+    UART_RTS <= '1';
+    AUD_XCK <= '1';
+    AUD_BCLK <= '1';
+    AUD_DACDAT <= '1';
+    EX_IO <= "0000000";
+    ENET0_GTX_CLK <= '0';
+    ENET0_INT_N <= '0';
+    ENET0_MDC <= '0';
+    ENET0_MDIO <= '0';
 end architecture;
 
 
