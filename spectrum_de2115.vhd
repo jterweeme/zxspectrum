@@ -55,8 +55,7 @@ port (
     LEDR: out std_logic_vector(17 downto 0);
     LEDG: out std_logic_vector(7 downto 0);
     VGA_R, VGA_G, VGA_B: out std_logic_vector(7 downto 0);
-    VGA_HS, VGA_VS: out std_logic;
-    VGA_BLANK_N, VGA_CLK: out std_logic;
+    VGA_HS, VGA_VS, VGA_BLANK_N, VGA_CLK: out std_logic;
     UART_TXD, UART_RTS: out std_logic;
     PS2_CLK, PS2_DAT: inout std_logic;
     I2C_SCLK, I2C_SDAT: inout std_logic;
@@ -74,44 +73,18 @@ port (
     EAR_OUT: inout std_logic;
     EAR_IN: in std_logic;
     EX_IO: inout std_logic_vector(6 downto 0);
-    ENET0_GTX_CLK: out std_logic;
-    ENET0_INT_N: out std_logic;
-    ENET0_LINK100: in std_logic;
-    ENET0_MDC: out std_logic;
-    ENET0_MDIO: out std_logic
+    ENET0_GTX_CLK, ENET0_INT_N, ENET0_MDC, ENET0_MDIO: out std_logic;
+    ENET0_LINK100: in std_logic
     --LCD_DATA: out std_logic_vector(7 downto 0)
     );
 end entity;
 
 architecture rtl of spectrum_de2115 is
-component T80se is
-    generic(
-        Mode: integer := 0;    -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
-        T2Write: integer := 0;  -- 0 => WR_n active in T3, /=0 => WR_n active in T2
-        IOWait: integer := 1   -- 0 => Single cycle I/O, 1 => Std I/O cycle
-    );
-    port(
-        RESET_n: in std_logic;
-        CLK_n: in std_logic;
-        CLKEN: in std_logic;
-        WAIT_n: in std_logic;
-        INT_n: in std_logic;
-        NMI_n: in std_logic;
-        BUSRQ_n: in std_logic;
-        MREQ_n: out std_logic;
-        IORQ_n: out std_logic;
-        WR_n: out std_logic;
-        A: out std_logic_vector(15 downto 0);
-        DI: in std_logic_vector(7 downto 0);
-        DO: out std_logic_vector(7 downto 0)
-    );
-end component;
-
 signal pll_reset, pll_locked, clk28, cpu_en, vid_en, reset_n: std_logic;
 signal ula_enable, rom_enable, ram_enable: std_logic;
 signal ram_page, ula_border: std_logic_vector(2 downto 0);
 signal sram_di, vid_di, rom_di, cpu_di, cpu_do, ula_do: std_logic_vector(7 downto 0);
-signal cpu_mreq_n, cpu_ioreq_n, cpu_wr_n, ula_ear_out, ula_ear_in: std_logic;
+signal cpu_mreq_n, cpu_ioreq_n, cpu_wr_n, ula_ear_in: std_logic;
 signal cpu_a: std_logic_vector(15 downto 0);
 signal vid_a: std_logic_vector(12 downto 0);
 signal vid_is_valid, vid_pixclk, vid_irq_n: std_logic;
@@ -133,8 +106,9 @@ begin
 
     romx: entity work.rom port map (cpu_a(13 downto 0), clk28, rom_di);
 
-    cpu: T80se port map (reset_n, clk28, cpu_en, '1', vid_irq_n, '1',
-        '1', cpu_mreq_n, cpu_ioreq_n, cpu_wr_n, cpu_a, cpu_di, cpu_do);
+    cpu: entity work.T80se port map (reset_n, clk28, cpu_en, '1', vid_irq_n, '1',
+            '1', MREQ_n => cpu_mreq_n, IORQ_n => cpu_ioreq_n,
+				WR_n => cpu_wr_n, A => cpu_a, DI => cpu_di, DO => cpu_do);
 
     kb: entity work.keyboard port map (clk28, reset_n, PS2_CLK, PS2_DAT, cpu_a, keyb);
 
@@ -192,7 +166,7 @@ begin
 
     ula_port: process (clk28, reset_n) begin
         if reset_n = '0' then
-            ula_ear_out <= '0';
+		      EAR_OUT <= '0';
             --ula_mic_out <= '0';
             ula_border <= (others => '0');
             ula_do <= (others => '0');
@@ -206,6 +180,14 @@ begin
         end if;
     end process;	 
 
+    xhex7: entity work.encoder port map("0001", HEX7);
+	 xhex6: entity work.encoder port map("0010", HEX6);
+	 xhex5: entity work.encoder port map("0011", HEX5);
+	 xhex4: entity work.encoder port map("0100", HEX4);
+	 xhex3: entity work.encoder port map("0101", HEX3);
+	 xhex2: entity work.encoder port map("0110", HEX2);
+	 xhex1: entity work.encoder port map("0111", HEX1);
+	 xhex0: entity work.encoder port map("1000", HEX0);	 
     GPIO <= "0000000000000";
     GPIO2 <= cpu_a;
     FL_RST_N <= '0';
@@ -213,17 +195,8 @@ begin
     FL_OE_N <= '0';
     FL_WE_N <= '1';
     FL_ADDR <= (others => '0');
-    HEX0 <= "0000000";
-    HEX1 <= "1111000";
-    HEX2 <= "0000010";
-    HEX3 <= "0010010";
-    HEX4 <= "0011001";
-    HEX5 <= "0110000";
-    HEX6 <= "0100100";
-    HEX7 <= "1111001";
     LEDG <= "11000000";
     LEDR <= "000000000011111111";
-    --LCD_DATA <= "11111111";
     AUD_DACLRCK <= '1';
     AUD_ADCLRCK <= '1';
     UART_TXD <= '1';

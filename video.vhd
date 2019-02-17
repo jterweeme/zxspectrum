@@ -58,7 +58,7 @@ port(
 end video;
 
 architecture video_arch of video is
-signal nVID_RD, nWAIT: std_logic;
+--signal nVID_RD, nWAIT: std_logic;
 signal pixels, hcounter, vcounter: std_logic_vector(9 downto 0);
 signal attr: std_logic_vector(7 downto 0);
 signal flashcounter: std_logic_vector(4 downto 0);
@@ -112,7 +112,7 @@ begin
         when hcounter(2) = '0' else
         "110" & vcounter(8 downto 7) & vcounter(6 downto 4) & hcounter(8 downto 4);
 
-    nWAIT <= '1';
+    --nWAIT <= '1';
     vpicture <= not (vcounter(9) or (vcounter(8) and vcounter(7)));
 
     process(nRESET,CLK,CLKEN,hcounter,vcounter)
@@ -127,7 +127,7 @@ begin
             hsync <= '0';
             vsync <= '0';
             nIRQ <= '1';
-            nVID_RD <= '1';
+            --nVID_RD <= '1';
             pixels <= (others => '0');
             attr <= (others => '0');
         elsif rising_edge(CLK) and CLKEN = '1' then
@@ -135,14 +135,14 @@ begin
                 pixels(9 downto 1) <= pixels(8 downto 0);
                 if hcounter(9) = '0' and hcounter(3) = '0' then
                     if hcounter(1) = '0' then
-                        nVID_RD <= '0';
+                        --nVID_RD <= '0';
                     else
                         if hcounter(2) = '0' then
                             pixels(7 downto 0) <= VID_D_IN;
                         else
                             attr <= VID_D_IN;
                         end if;						
-                        nVID_RD <= '1';
+                        --nVID_RD <= '1';
                     end if;
                 end if;
 
