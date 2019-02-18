@@ -23,7 +23,7 @@ port (
     FL_ADDR: out std_logic_vector(22 downto 0);
     FL_DQ: inout std_logic_vector(7 downto 0);
     FL_RST_N, FL_OE_N, FL_WE_N, FL_CE_N: out std_logic;
-    GPIO: inout std_logic_vector(12 downto 0);
+    GPIO: out std_logic_vector(12 downto 0);
     GPIO2: out std_logic_vector(15 downto 0);
     GPIO3: inout std_logic_vector(4 downto 0);
     EAR_OUT: inout std_logic;
@@ -79,9 +79,9 @@ begin
     ula_en <= not cpu_ioreq_n and not cpu_a(0); -- all even IO addresses
     rom_en <= not cpu_mreq_n and not (cpu_a(15) or cpu_a(14));
     ram_en <= not (cpu_mreq_n or rom_en);
-    ram_page <= "000" when cpu_a(15 downto 14) = "11" else cpu_a(14) & cpu_a(15 downto 14);
     sram_di <= SRAM_DQ(15 downto 8) when cpu_a(0) = '1' else SRAM_DQ(7 downto 0);
     vid_di <= SRAM_DQ(15 downto 8) when vid_a(0) = '1' else SRAM_DQ(7 downto 0);
+    ram_page <= "000" when cpu_a(15 downto 14) = "11" else cpu_a(14) & cpu_a(15 downto 14);
 
     cpu_mux: cpu_di <= sram_di when ram_en = '1' else
         rom_di when rom_en = '1' else
@@ -103,9 +103,7 @@ begin
                 SRAM_UB_N <= not cpu_a(0);
                 SRAM_LB_N <= cpu_a(0);
                 SRAM_WE_N <= not sram_write;
-                if rom_en = '0' then
-                    SRAM_ADDR <= "0000" & ram_page & cpu_a(13 downto 1);
-                end if;
+                SRAM_ADDR <= "0000" & ram_page & cpu_a(13 downto 1);
                 if sram_write = '1' then
                     SRAM_DQ(15 downto 8) <= cpu_do;
                     SRAM_DQ(7 downto 0) <= cpu_do;
@@ -135,8 +133,16 @@ begin
         end if;
     end process;	 
 
+	 xhex0: entity work.encoder port map("0001", HEX0);
+	 xhex1: entity work.encoder port map("0010", HEX1);
+	 xhex2: entity work.encoder port map("0011", HEX2);
+	 xhex3: entity work.encoder port map("0100", HEX3);
+	 xhex4: entity work.encoder port map("0101", HEX4);
+	 xhex5: entity work.encoder port map("0110", HEX5);
+	 xhex6: entity work.encoder port map("0111", HEX6);
+	 xhex7: entity work.encoder port map("1000", HEX7);
     GPIO <= "0000000000000";
-    GPIO2 <= cpu_a;
+    --GPIO2 <= cpu_a;
     FL_RST_N <= '0';
     FL_CE_N <= '0';
     FL_OE_N <= '0';
@@ -151,7 +157,9 @@ begin
     AUD_XCK <= '1';
     AUD_BCLK <= '1';
     AUD_DACDAT <= '1';
-    EX_IO <= "0000000";
+    --EX_IO <= "0000000";
+	 I2C_SCLK <= '1';
+	 I2C_SDAT <= '1';
     ENET0_GTX_CLK <= '0';
     ENET0_INT_N <= '0';
     ENET0_MDC <= '0';
