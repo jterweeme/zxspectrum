@@ -45,6 +45,10 @@ signal vid_a: std_logic_vector(12 downto 0);
 signal vid_is_valid, vid_pixclk, vid_irq_n: std_logic;
 signal keyb: std_logic_vector(4 downto 0);
 signal counter: unsigned(19 downto 0);
+signal ram_a: std_logic_vector(15 downto 0);
+signal ram_in, ram_out: std_logic_vector(15 downto 0);
+signal ram_byteen: std_logic_vector(1 downto 0);
+signal ram_wr: std_logic;
 begin
     pll: entity work.pll_main port map (pll_reset, clk50, clk28, pll_locked);
     cpu_en <= not (counter(0) or counter(1) or counter(2));
@@ -60,6 +64,7 @@ begin
     end process;
 
     romx: entity work.rom port map (cpu_a(13 downto 0), clk28, rom_di);
+	 ramx: entity work.ram port map (ram_a, ram_byteen, clk28, ram_in, ram_wr, ram_out);
 
     cpu: entity work.T80se port map (reset_n, clk28, cpu_en, '1', vid_irq_n, '1',
             '1', MREQ_n => cpu_mreq_n, IORQ_n => cpu_ioreq_n,
@@ -72,15 +77,17 @@ begin
         VGA_R, VGA_G, VGA_B, VGA_VS, VGA_HS,
         VGA_BLANK_N, VGA_CLK, vid_irq_n);
 
-    SRAM_CE_N <= '0';
-    SRAM_OE_N <= '0';
+--    SRAM_CE_N <= '0';
+--    SRAM_OE_N <= '0';
     pll_reset <= not KEY(0);
     reset_n <= not (pll_reset or not pll_locked);
     ula_en <= not cpu_ioreq_n and not cpu_a(0); -- all even IO addresses
     rom_en <= not cpu_mreq_n and not (cpu_a(15) or cpu_a(14));
     ram_en <= not (cpu_mreq_n or rom_en);
-    sram_di <= SRAM_DQ(15 downto 8) when cpu_a(0) = '1' else SRAM_DQ(7 downto 0);
-    vid_di <= SRAM_DQ(15 downto 8) when vid_a(0) = '1' else SRAM_DQ(7 downto 0);
+    --sram_di <= SRAM_DQ(15 downto 8) when cpu_a(0) = '1' else SRAM_DQ(7 downto 0);
+    --vid_di <= SRAM_DQ(15 downto 8) when vid_a(0) = '1' else SRAM_DQ(7 downto 0);
+	 sram_di <= ram_out(15 downto 8) when cpu_a(0) = '1' else ram_out(7 downto 0);
+	 vid_di <= ram_out(15 downto 8) when cpu_a(0) = '1' else ram_out(7 downto 0);
     ram_page <= "000" when cpu_a(15 downto 14) = "11" else cpu_a(14) & cpu_a(15 downto 14);
 
     cpu_mux: cpu_di <= sram_di when ram_en = '1' else
@@ -93,27 +100,33 @@ begin
     begin
         sram_write := ram_en and not cpu_wr_n;
         if reset_n = '0' then
-            SRAM_WE_N <= '1';
-            SRAM_UB_N <= '1';
-            SRAM_LB_N <= '1';
-            SRAM_DQ <= (others => 'Z');
+--            SRAM_WE_N <= '1';
+--            SRAM_UB_N <= '1';
+--            SRAM_LB_N <= '1';
+--            SRAM_DQ <= (others => 'Z');
+				ram_byteen <= "00";
         elsif rising_edge(clk28) then
             SRAM_DQ <= (others => 'Z');
-            if vid_en = '1' then
-                SRAM_UB_N <= not cpu_a(0);
-                SRAM_LB_N <= cpu_a(0);
-                SRAM_WE_N <= not sram_write;
-                SRAM_ADDR <= "0000" & ram_page & cpu_a(13 downto 1);
+            --if vid_en = '1' then
+				    ram_byteen <= cpu_a(0) & not cpu_a(0);
+					 ram_wr <= sram_write;
+--                SRAM_UB_N <= not cpu_a(0);
+--                SRAM_LB_N <= cpu_a(0);
+--                SRAM_WE_N <= not sram_write;
+--                SRAM_ADDR <= "0000" & ram_page & cpu_a(13 downto 1);
+					 ram_a <= ram_page & cpu_a(13 downto 1);
                 if sram_write = '1' then
-                    SRAM_DQ(15 downto 8) <= cpu_do;
-                    SRAM_DQ(7 downto 0) <= cpu_do;
+					     ram_in(15 downto 8) <= cpu_do;
+						  ram_in(7 downto 0) <= cpu_do;
+--                    SRAM_DQ(15 downto 8) <= cpu_do;
+--                    SRAM_DQ(7 downto 0) <= cpu_do;
                 end if;
-            else
-                SRAM_UB_N <= '0';
-                SRAM_LB_N <= '0';
-                SRAM_WE_N <= '1';
-                SRAM_ADDR <= "00001010" & vid_a(12 downto 1);
-            end if;
+--            else
+--                SRAM_UB_N <= '0';
+--                SRAM_LB_N <= '0';
+--                SRAM_WE_N <= '1';
+--                SRAM_ADDR <= "00001010" & vid_a(12 downto 1);
+--            end if;
         end if;
     end process;
 
