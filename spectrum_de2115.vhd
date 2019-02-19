@@ -64,11 +64,11 @@ begin
     end process;
 
     romx: entity work.rom port map (cpu_a(13 downto 0), clk28, rom_di);
-	 ramx: entity work.ram port map (ram_a, ram_byteen, clk28, ram_in, ram_wr, ram_out);
+    ramx: entity work.ram port map (ram_a, ram_byteen, clk28, ram_in, ram_wr, ram_out);
 
     cpu: entity work.T80se port map (reset_n, clk28, cpu_en, '1', vid_irq_n, '1',
             '1', MREQ_n => cpu_mreq_n, IORQ_n => cpu_ioreq_n,
-				WR_n => cpu_wr_n, A => cpu_a, DI => cpu_di, DO => cpu_do);
+            WR_n => cpu_wr_n, A => cpu_a, DI => cpu_di, DO => cpu_do);
 
     kb: entity work.keyboard port map (clk28, reset_n, PS2_CLK, PS2_DAT, cpu_a, keyb);
 
@@ -77,17 +77,13 @@ begin
         VGA_R, VGA_G, VGA_B, VGA_VS, VGA_HS,
         VGA_BLANK_N, VGA_CLK, vid_irq_n);
 
---    SRAM_CE_N <= '0';
---    SRAM_OE_N <= '0';
     pll_reset <= not KEY(0);
     reset_n <= not (pll_reset or not pll_locked);
     ula_en <= not cpu_ioreq_n and not cpu_a(0); -- all even IO addresses
     rom_en <= not cpu_mreq_n and not (cpu_a(15) or cpu_a(14));
     ram_en <= not (cpu_mreq_n or rom_en);
-    --sram_di <= SRAM_DQ(15 downto 8) when cpu_a(0) = '1' else SRAM_DQ(7 downto 0);
-    --vid_di <= SRAM_DQ(15 downto 8) when vid_a(0) = '1' else SRAM_DQ(7 downto 0);
-	 sram_di <= ram_out(15 downto 8) when cpu_a(0) = '1' else ram_out(7 downto 0);
-	 vid_di <= ram_out(15 downto 8) when cpu_a(0) = '1' else ram_out(7 downto 0);
+    sram_di <= ram_out(15 downto 8) when cpu_a(0) = '1' else ram_out(7 downto 0);
+    vid_di <= ram_out(15 downto 8) when cpu_a(0) = '1' else ram_out(7 downto 0);
     ram_page <= "000" when cpu_a(15 downto 14) = "11" else cpu_a(14) & cpu_a(15 downto 14);
 
     cpu_mux: cpu_di <= sram_di when ram_en = '1' else
@@ -100,39 +96,27 @@ begin
     begin
         sram_write := ram_en and not cpu_wr_n;
         if reset_n = '0' then
---            SRAM_WE_N <= '1';
---            SRAM_UB_N <= '1';
---            SRAM_LB_N <= '1';
---            SRAM_DQ <= (others => 'Z');
-				ram_byteen <= "00";
+            ram_byteen <= "00";
         elsif rising_edge(clk28) then
-            SRAM_DQ <= (others => 'Z');
-            --if vid_en = '1' then
-				    ram_byteen <= cpu_a(0) & not cpu_a(0);
-					 ram_wr <= sram_write;
---                SRAM_UB_N <= not cpu_a(0);
---                SRAM_LB_N <= cpu_a(0);
---                SRAM_WE_N <= not sram_write;
---                SRAM_ADDR <= "0000" & ram_page & cpu_a(13 downto 1);
-					 ram_a <= ram_page & cpu_a(13 downto 1);
+            if vid_en = '1' then
+                ram_byteen <= cpu_a(0) & not cpu_a(0);
+                ram_wr <= sram_write;
+                ram_a <= ram_page & cpu_a(13 downto 1);
                 if sram_write = '1' then
-					     ram_in(15 downto 8) <= cpu_do;
-						  ram_in(7 downto 0) <= cpu_do;
---                    SRAM_DQ(15 downto 8) <= cpu_do;
---                    SRAM_DQ(7 downto 0) <= cpu_do;
+                    ram_in(15 downto 8) <= cpu_do;
+                    ram_in(7 downto 0) <= cpu_do;
                 end if;
---            else
---                SRAM_UB_N <= '0';
---                SRAM_LB_N <= '0';
---                SRAM_WE_N <= '1';
---                SRAM_ADDR <= "00001010" & vid_a(12 downto 1);
---            end if;
+            else
+                ram_byteen <= "11";
+                ram_wr <= '0';
+                ram_a <= "1010" & vid_a(12 downto 1);
+            end if;
         end if;
     end process;
 
     ula_port: process (clk28, reset_n) begin
         if reset_n = '0' then
-		      EAR_OUT <= '0';
+            EAR_OUT <= '0';
             --ula_mic_out <= '0';
             ula_border <= (others => '0');
             ula_do <= (others => '0');
@@ -144,16 +128,16 @@ begin
                 ula_border <= cpu_do(2 downto 0);
             end if;
         end if;
-    end process;	 
+    end process;
 
-	 xhex0: entity work.encoder port map("0001", HEX0);
-	 xhex1: entity work.encoder port map("0010", HEX1);
-	 xhex2: entity work.encoder port map("0011", HEX2);
-	 xhex3: entity work.encoder port map("0100", HEX3);
-	 xhex4: entity work.encoder port map("0101", HEX4);
-	 xhex5: entity work.encoder port map("0110", HEX5);
-	 xhex6: entity work.encoder port map("0111", HEX6);
-	 xhex7: entity work.encoder port map("1000", HEX7);
+    --xhex0: entity work.encoder port map("0001", HEX0);
+    --xhex1: entity work.encoder port map("0010", HEX1);
+    --xhex2: entity work.encoder port map("0011", HEX2);
+    --xhex3: entity work.encoder port map("0100", HEX3);
+    --xhex4: entity work.encoder port map("0101", HEX4);
+    --xhex5: entity work.encoder port map("0110", HEX5);
+    --xhex6: entity work.encoder port map("0111", HEX6);
+    --xhex7: entity work.encoder port map("1000", HEX7);
     GPIO <= "0000000000000";
     --GPIO2 <= cpu_a;
     FL_RST_N <= '0';
@@ -171,8 +155,8 @@ begin
     AUD_BCLK <= '1';
     AUD_DACDAT <= '1';
     --EX_IO <= "0000000";
-	 I2C_SCLK <= '1';
-	 I2C_SDAT <= '1';
+    I2C_SCLK <= '1';
+    I2C_SDAT <= '1';
     ENET0_GTX_CLK <= '0';
     ENET0_INT_N <= '0';
     ENET0_MDC <= '0';
