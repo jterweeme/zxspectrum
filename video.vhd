@@ -43,9 +43,7 @@ use ieee.std_logic_unsigned.all;
 
 entity video is
 port(
-    CLK: in std_logic;
-    CLKEN: in std_logic;
-    nRESET: in std_logic;
+    CLK, CLKEN, nRESET: in std_logic;
     VID_A: out std_logic_vector(12 downto 0);
     VID_D_IN: in std_logic_vector(7 downto 0);
     BORDER_IN: in std_logic_vector(2 downto 0);
@@ -58,7 +56,6 @@ port(
 end video;
 
 architecture video_arch of video is
---signal nVID_RD, nWAIT: std_logic;
 signal pixels, hcounter, vcounter: std_logic_vector(9 downto 0);
 signal attr: std_logic_vector(7 downto 0);
 signal flashcounter: std_logic_vector(4 downto 0);
@@ -112,7 +109,6 @@ begin
         when hcounter(2) = '0' else
         "110" & vcounter(8 downto 7) & vcounter(6 downto 4) & hcounter(8 downto 4);
 
-    --nWAIT <= '1';
     vpicture <= not (vcounter(9) or (vcounter(8) and vcounter(7)));
 
     process(nRESET,CLK,CLKEN,hcounter,vcounter)
@@ -127,7 +123,6 @@ begin
             hsync <= '0';
             vsync <= '0';
             nIRQ <= '1';
-            --nVID_RD <= '1';
             pixels <= (others => '0');
             attr <= (others => '0');
         elsif rising_edge(CLK) and CLKEN = '1' then
@@ -135,58 +130,50 @@ begin
                 pixels(9 downto 1) <= pixels(8 downto 0);
                 if hcounter(9) = '0' and hcounter(3) = '0' then
                     if hcounter(1) = '0' then
-                        --nVID_RD <= '0';
                     else
                         if hcounter(2) = '0' then
                             pixels(7 downto 0) <= VID_D_IN;
                         else
                             attr <= VID_D_IN;
-                        end if;						
-                        --nVID_RD <= '1';
+                        end if;
                     end if;
                 end if;
-
-				if hcounter(9) = '0' and hcounter(2 downto 1) = "11" then
-					hpicture <= '1';
-				end if;
-				if hcounter(9) = '1' and hcounter(2 downto 1) = "11" then
-					hpicture <= '0';
-				end if;
-			end if;
-	
-			if hcounter = "1101111110" then
-				hcounter <= (others => '0');
-				vcounter <= vcounter + '1';
-			else
-				hcounter <= hcounter + "10";
-            hcounter(0) <= '0';
-			end if;
-	
-			case hcounter(9 downto 4) is
-			when "100110" => hblanking <= '1';
-			when "101001" => hsync <= '1';
-			when "101101" => hsync <= '0';
-			when "110010" => hblanking <= '0';
-			when others => null;
-			end case;
-			
+                if hcounter(9) = '0' and hcounter(2 downto 1) = "11" then
+                    hpicture <= '1';
+                end if;
+                if hcounter(9) = '1' and hcounter(2 downto 1) = "11" then
+                    hpicture <= '0';
+                end if;
+            end if;
+            if hcounter = "1101111110" then
+                hcounter <= (others => '0');
+                vcounter <= vcounter + '1';
+            else
+                hcounter <= hcounter + "10";
+                hcounter(0) <= '0';
+            end if;
+            case hcounter(9 downto 4) is
+            when "100110" => hblanking <= '1';
+            when "101001" => hsync <= '1';
+            when "101101" => hsync <= '0';
+            when "110010" => hblanking <= '0';
+            when others => null;
+            end case;
             if hcounter(7) = '1' then
                 nIRQ <= '1';
             end if;
-
             case vcounter(9 downto 3) is
-			   when "0111110" =>
-				    vblanking <= '1';
-				    vsync <= '1';
-				    nIRQ <= '0';
-			   when "0111111" =>
-				    vsync <= '0';
-			   when "1000000" =>
-				    vblanking <= '0';
-			   when others =>
-				    null;
+            when "0111110" =>
+                vblanking <= '1';
+                vsync <= '1';
+                nIRQ <= '0';
+            when "0111111" =>
+                vsync <= '0';
+            when "1000000" =>
+                vblanking <= '0';
+            when others =>
+                null;
             end case;
-
             if vcounter(9 downto 1) = "100110111" then
                 if (vcounter(0) = '1') then
                     vcounter <= (others => '0');
@@ -196,6 +183,8 @@ begin
         end if;
     end process;
 end video_arch;
+
+
 
 
 
