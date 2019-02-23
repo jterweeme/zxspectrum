@@ -6,7 +6,8 @@ entity spectrum_de2115 is
 port (
     clk50: in std_logic;
     KEY: in std_logic_vector(3 downto 0);
-    VGA_R, VGA_G, VGA_B: out std_logic_vector(7 downto 0);
+    KEYB: in std_logic_vector(4 downto 0);
+    A, VGA_R, VGA_G, VGA_B: out std_logic_vector(7 downto 0);
     VGA_HS, VGA_VS, VGA_BLANK_N, VGA_CLK, EAR_OUT: out std_logic;
     PS2_CLK, PS2_DAT: inout std_logic;
     EAR_IN: in std_logic);
@@ -19,9 +20,10 @@ signal ula_border: std_logic_vector(2 downto 0);
 signal ram_in, ram_out, rom_di, cpu_di, cpu_do, ula_do: std_logic_vector(7 downto 0);
 signal cpu_a, ram_a: std_logic_vector(15 downto 0);
 signal vid_a: std_logic_vector(12 downto 0);
-signal keyb: std_logic_vector(4 downto 0);
+signal xkeyb: std_logic_vector(4 downto 0);
 signal counter: unsigned(19 downto 0);
 begin
+    A <= cpu_a(15 downto 8);
     pll: entity work.pll_main port map (pll_reset, clk50, clk28, pll_locked);
     pll_reset <= not KEY(0);
     reset_n <= not (pll_reset or not pll_locked);
@@ -45,7 +47,7 @@ begin
 
     romx: entity work.rom port map (cpu_a(13 downto 0), clk28, rom_di);
     ramx: entity work.ram port map (ram_a, clk28, ram_in, ram_wr, ram_out);
-    kb: entity work.keyboard port map (clk28, reset_n, PS2_CLK, PS2_DAT, cpu_a, keyb);
+    kb: entity work.keyboard port map (clk28, reset_n, PS2_CLK, PS2_DAT, cpu_a, xkeyb);
     ula_en <= not cpu_ioreq_n and not cpu_a(0); -- all even IO addresses
     rom_en <= not cpu_mreq_n and not (cpu_a(15) or cpu_a(14));
     ram_en <= not (cpu_mreq_n or rom_en);
@@ -75,7 +77,7 @@ begin
             ula_border <= (others => '0');
             ula_do <= (others => '0');
         elsif rising_edge(clk28) then
-            ula_do <= '0' & EAR_IN & '0' & keyb;
+            ula_do <= '0' & EAR_IN & '0' & KEYB;
             if ula_en = '1' and cpu_wr_n = '0' then
                 EAR_OUT <= cpu_do(4);
                 --ula_mic_out <= cpu_do(3);
