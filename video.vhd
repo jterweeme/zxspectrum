@@ -128,14 +128,11 @@ begin
         elsif rising_edge(CLK) and CLKEN = '1' then
             if vpicture = '1' and hcounter(0) = '0' then
                 pixels(9 downto 1) <= pixels(8 downto 0);
-                if hcounter(9) = '0' and hcounter(3) = '0' then
-                    if hcounter(1) = '0' then
+                if hcounter(9) = '0' and hcounter(3) = '0' and hcounter(1) = '1' then
+                    if hcounter(2) = '0' then
+                        pixels(7 downto 0) <= VID_D_IN;
                     else
-                        if hcounter(2) = '0' then
-                            pixels(7 downto 0) <= VID_D_IN;
-                        else
-                            attr <= VID_D_IN;
-                        end if;
+                        attr <= VID_D_IN;
                     end if;
                 end if;
                 if hcounter(9) = '0' and hcounter(2 downto 1) = "11" then

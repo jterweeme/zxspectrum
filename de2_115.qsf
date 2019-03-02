@@ -4,7 +4,7 @@
 
 set_global_assignment -name FAMILY "Cyclone IV E"
 set_global_assignment -name DEVICE EP4CE115F29C7
-set_global_assignment -name TOP_LEVEL_ENTITY spectrum_de2115
+set_global_assignment -name TOP_LEVEL_ENTITY de2_115
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 9.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "21:43:01  FEBRUARY 24, 2010"
 set_global_assignment -name LAST_QUARTUS_VERSION "13.0 SP1"
@@ -618,7 +618,7 @@ set_location_assignment PIN_L1 -to LCD_DATA[1]
 set_location_assignment PIN_L3 -to LCD_DATA[0]
 set_global_assignment -name SDC_FILE spectrum.sdc
 set_global_assignment -name VHDL_FILE sevenseg.vhd
-set_global_assignment -name VHDL_FILE spectrum_de2115.vhd
+set_global_assignment -name VHDL_FILE de2_115.vhd
 set_global_assignment -name VHDL_FILE video.vhd
 set_global_assignment -name VHDL_FILE T80/T80.vhd
 set_global_assignment -name VHDL_FILE T80/T80_ALU.vhd
@@ -646,4 +646,5 @@ set_location_assignment PIN_AE20 -to A[3]
 set_location_assignment PIN_AG23 -to A[2]
 set_location_assignment PIN_AF20 -to A[1]
 set_location_assignment PIN_AH26 -to A[0]
+
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

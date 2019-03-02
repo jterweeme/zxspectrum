@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity spectrum_de2115 is
+entity de2_115 is
 port (
     clk50: in std_logic;
     KEY: in std_logic_vector(3 downto 0);
@@ -11,9 +11,9 @@ port (
     VGA_HS, VGA_VS, VGA_BLANK_N, VGA_CLK, EAR_OUT: out std_logic;
     PS2_CLK, PS2_DAT: inout std_logic;
     EAR_IN: in std_logic);
-end entity;
+end entity de2_115;
 
-architecture rtl of spectrum_de2115 is
+architecture rtl of de2_115 is
 signal pll_reset, pll_locked, clk28, cpu_en, vid_en, reset_n, cpu_mreq_n: std_logic;
 signal ula_en, rom_en, ram_en, vid_irq_n, ram_wr, cpu_ioreq_n, cpu_wr_n: std_logic;
 signal ula_border: std_logic_vector(2 downto 0);
@@ -77,7 +77,7 @@ begin
             ula_border <= (others => '0');
             ula_do <= (others => '0');
         elsif rising_edge(clk28) then
-            ula_do <= '0' & EAR_IN & '0' & KEYB;
+            ula_do <= '0' & EAR_IN & '0' & xkeyb;
             if ula_en = '1' and cpu_wr_n = '0' then
                 EAR_OUT <= cpu_do(4);
                 --ula_mic_out <= cpu_do(3);
@@ -85,6 +85,6 @@ begin
             end if;
         end if;
     end process;
-end architecture;
+end architecture rtl;
 
 
