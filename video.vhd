@@ -38,8 +38,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_arith.all;
-use ieee.std_logic_unsigned.all;
+use ieee.numeric_std.all;
 
 entity video is
 port(
@@ -56,9 +55,10 @@ port(
 end video;
 
 architecture video_arch of video is
-signal pixels, hcounter, vcounter: std_logic_vector(9 downto 0);
+signal pixels: std_logic_vector(9 downto 0);
+signal hcounter, vcounter: unsigned(9 downto 0);
 signal attr: std_logic_vector(7 downto 0);
-signal flashcounter: std_logic_vector(4 downto 0);
+signal flashcounter: unsigned(4 downto 0);
 signal vblanking, hblanking: std_logic;
 signal hpicture, vpicture: std_logic;
 signal picture: std_logic;
@@ -105,9 +105,9 @@ begin
     end process;
 
     VID_A(12 downto 0) <=
-        vcounter(8 downto 7) & vcounter(3 downto 1) & vcounter(6 downto 4) & hcounter(8 downto 4)
+        std_logic_vector(vcounter(8 downto 7) & vcounter(3 downto 1) & vcounter(6 downto 4) & hcounter(8 downto 4))
         when hcounter(2) = '0' else
-        "110" & vcounter(8 downto 7) & vcounter(6 downto 4) & hcounter(8 downto 4);
+        "110" & std_logic_vector(vcounter(8 downto 4) & hcounter(8 downto 4));
 
     vpicture <= not (vcounter(9) or (vcounter(8) and vcounter(7)));
 
@@ -144,9 +144,9 @@ begin
             end if;
             if hcounter = "1101111110" then
                 hcounter <= (others => '0');
-                vcounter <= vcounter + '1';
+                vcounter <= vcounter + 1;
             else
-                hcounter <= hcounter + "10";
+                hcounter <= hcounter + 2;
                 hcounter(0) <= '0';
             end if;
             case hcounter(9 downto 4) is
@@ -174,7 +174,7 @@ begin
             if vcounter(9 downto 1) = "100110111" then
                 if (vcounter(0) = '1') then
                     vcounter <= (others => '0');
-                    flashcounter <= flashcounter + '1';
+                    flashcounter <= flashcounter + 1;
                 end if;
             end if;
         end if;

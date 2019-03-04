@@ -36,9 +36,9 @@
 --
 
 -- PS/2 scancode to Spectrum matrix conversion
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.NUMERIC_STD.ALL;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 entity keyboard is
 port (
@@ -56,10 +56,8 @@ generic (filter_length : positive := 8);
 port(
 	CLK			:	in	std_logic;
 	nRESET		:	in	std_logic;
-	
-	-- PS/2 interface (could be bi-dir)
-	PS2_CLK		:	in	std_logic;
-	PS2_DATA	:	in	std_logic;
+	PS2_CLK: in std_logic;
+	PS2_DATA: in std_logic;
 	
 	-- Byte-wide data interface - only valid for one clock
 	-- so must be latched externally if required
@@ -69,35 +67,10 @@ port(
 	);
 end component;
 
---component ps2_controller is
---generic (INITIALIZE_MOUSE : integer := 0);
---port(
---		-- Clock and reset
---		CLOCK_50		:	in std_logic;
---		reset			:	in std_logic;
---		-- Sending commands
---		the_command	:	in std_logic_vector(7 downto 0);
---		send_command	:	in std_logic;
---		-- Biridrection signals
---		PS2_CLK		:	inout std_logic;
---		PS2_DAT		:	inout std_logic;
---		-- Comms flags
---		command_was_sent	:	out std_logic;
---		error_communication_timed_out	:	out std_logic;
---		-- Receiving commands
---		received_data	:	out std_logic_vector(7 downto 0);
---		received_data_en	:	out std_logic		-- Receiving is enabled
---	);
---end component;
-
 -- Interface to PS/2 block
 signal keyb_data	:	std_logic_vector(7 downto 0);
 signal keyb_valid	:	std_logic;
 signal keyb_error	:	std_logic;
---signal keyb_out	:	std_logic_vector(7 downto 0);
---signal keyb_dosend :	std_logic;
---signal keyb_cmdsent : std_logic;
---signal keyb_ensend	: std_logic;
 
 -- Internal signals
 type key_matrix is array (7 downto 0) of std_logic_vector(4 downto 0);
@@ -123,12 +96,11 @@ begin
 		(others => '1');
 
 		
-	process(nRESET,CLK)
-	begin
-		if nRESET = '0' then
-			release <= '0';
-			extended <= '0';
---			keyb_dosend <= '0';
+    process(nRESET,CLK)
+    begin
+        if nRESET = '0' then
+            release <= '0';
+            extended <= '0';
 			
 			keys(0) <= (others => '1');
 			keys(1) <= (others => '1');
@@ -151,9 +123,6 @@ begin
 					release <= '0';
 					extended <= '0';
 				
-					-- Output last keys used
---					DIG0 <= keyb_data(3 downto 0);
---					DIG1 <= keyb_data(7 downto 4);	
 					case keyb_data is					
 					when X"12" => keys(0)(0) <= release; -- Left shift (CAPS SHIFT)
 					when X"59" => keys(0)(0) <= release; -- Right shift (CAPS SHIFT)
@@ -204,33 +173,12 @@ begin
 					when X"31" => keys(7)(3) <= release; -- N
 					when X"32" => keys(7)(4) <= release; -- B
 					
-					-- Cursor keys - these are actually extended (E0 xx), but
-					-- the scancodes for the numeric keypad cursor keys are
-					-- are the same but without the extension, so we'll accept
-					-- the codes whether they are extended or not
-					when X"6B" => 	keys(0)(0) <= release; -- Left (CAPS 5)
-									keys(3)(4) <= release;
-					when X"72" =>	keys(0)(0) <= release; -- Down (CAPS 6)
-									keys(4)(4) <= release;
-					when X"75" =>	keys(0)(0) <= release; -- Up (CAPS 7)
-									keys(4)(3) <= release;
-					when X"74" =>	keys(0)(0) <= release; -- Right (CAPS 8)
-									keys(4)(2) <= release;
-									
-					-- Other special keys sent to the ULA as key combinations
-					when X"66" =>	keys(0)(0) <= release; -- Backspace (CAPS 0)
-									keys(4)(0) <= release;
-					when X"58" =>	keys(0)(0) <= release; -- Caps lock (CAPS 2)
-									keys(3)(1) <= release;
-					when X"76" =>	keys(0)(0) <= release; -- Escape (CAPS SPACE)
-									keys(7)(0) <= release;
-					
-					when others =>
-						null;
+					when others => null;
 					end case;
 				end if;
 			end if;
 		end if;
 	end process;
-
 end architecture;
+
+

@@ -617,7 +617,6 @@ set_location_assignment PIN_L2 -to LCD_DATA[2]
 set_location_assignment PIN_L1 -to LCD_DATA[1]
 set_location_assignment PIN_L3 -to LCD_DATA[0]
 set_global_assignment -name SDC_FILE spectrum.sdc
-set_global_assignment -name VHDL_FILE sevenseg.vhd
 set_global_assignment -name VHDL_FILE de2_115.vhd
 set_global_assignment -name VHDL_FILE video.vhd
 set_global_assignment -name VHDL_FILE T80/T80.vhd

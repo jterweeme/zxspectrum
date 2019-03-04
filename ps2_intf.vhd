@@ -38,9 +38,8 @@
 -- PS/2 interface (input only)
 -- Based loosely on ps2_ctrl.vhd (c) ALSE. http://www.alse-fr.com
 library ieee;
-use ieee.STD_LOGIC_1164.all;
-use ieee.STD_LOGIC_ARITH.all;
-use ieee.STD_LOGIC_UNSIGNED.all;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 -- This is input-only for the time being
 entity ps2_intf is
