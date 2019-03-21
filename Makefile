@@ -1,7 +1,7 @@
 all: spectrum.sof
 
 spectrum.sof:
-	quartus_sh --flow compile spectrum -c spectrum
+	quartus_sh --flow compile spectrum -c de2_115
 
 clean:
 	rm -Rvf db incremental_db simulation greybox_tmp
